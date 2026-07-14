@@ -1,6 +1,7 @@
 import { Queue, Worker, type Job } from "bullmq";
 import Squad from "../models/Squad.js";
 import { SquadStatus as SquadStatusEnum } from "../types/enums.js";
+import { closeVotingWorker, votingResolutionQueue } from "./votingResolutionWorker.js";
 
 /* ------------------------------------------------------------------ */
 /* Redis connection                                                   */
@@ -63,6 +64,15 @@ async function processSquadResolution(job: Job<SquadResolutionJobData>): Promise
     squad.status = SquadStatusEnum.Voting;
     await squad.save();
     console.info(`[squadWorker] squad ${squadId} moved to Voting.`);
+
+    // Schedule the final voting resolution 2 hours from now — buyers get a
+    // 2-hour window to vote before the squad is resolved automatically.
+    await votingResolutionQueue.add(
+      "voting-resolution",
+      { squadId },
+      { delay: 2 * 60 * 60 * 1000, jobId: `vote_${squadId}` },
+    );
+    console.info(`[squadWorker] scheduled voting resolution for squad ${squadId} in 2h.`);
   } else {
     // Defensive: target was hit but status wasn't flipped (e.g. race with
     // webhook). Lock it in as Captured.
@@ -95,4 +105,5 @@ squadWorker.on("failed", (job, err) => {
 export async function closeSquadWorker(): Promise<void> {
   await squadWorker.close();
   await squadResolutionQueue.close();
+  await closeVotingWorker();
 }

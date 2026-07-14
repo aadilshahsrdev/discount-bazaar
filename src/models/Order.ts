@@ -4,6 +4,8 @@ import {
   OrderLogisticsStatus as LogisticsEnum,
   type PaymentMethod,
   PaymentMethod as PaymentMethodEnum,
+  type PurchaseType,
+  PurchaseType as PurchaseTypeEnum,
 } from "../types/enums.js";
 
 /* ------------------------------------------------------------------ */
@@ -20,6 +22,10 @@ export interface IOrderTotals {
   platformFee: number;
   supplierPayout: number; // what the supplier receives post-capture
   total: number; // charged to buyer
+  // Zero-wallet split: total is partitioned into the Safepay-captured deposit
+  // and a cash-on-delivery balance settled by the courier.
+  depositPaid: number; // PKR, captured from the 10% pre-auth
+  codAmountDue: number; // PKR, remaining balance due on delivery
 }
 
 const OrderTotalsSchema = new Schema<IOrderTotals>(
@@ -33,6 +39,8 @@ const OrderTotalsSchema = new Schema<IOrderTotals>(
     platformFee: { type: Number, required: true, default: 0, min: 0 },
     supplierPayout: { type: Number, required: true, min: 0 },
     total: { type: Number, required: true, min: 0 },
+    depositPaid: { type: Number, required: true, default: 0, min: 0 },
+    codAmountDue: { type: Number, required: true, default: 0, min: 0 },
   },
   { _id: false },
 );
@@ -47,6 +55,7 @@ export interface IOrder extends Document {
   productId: Types.ObjectId;
   squadId?: Types.ObjectId;
   transactionId: Types.ObjectId; // the captured Safepay transaction
+  purchaseType: PurchaseType; // Squad | Standard
   totals: IOrderTotals;
   paymentMethod: PaymentMethod;
   logisticsStatus: OrderLogisticsStatus;
@@ -68,6 +77,12 @@ const OrderSchema = new Schema<IOrder>(
       ref: "Transaction",
       required: true,
     },
+    purchaseType: {
+      type: String,
+      enum: Object.values(PurchaseTypeEnum),
+      required: true,
+      index: true,
+    },
     totals: { type: OrderTotalsSchema, required: true },
     paymentMethod: {
       type: String,
@@ -78,7 +93,7 @@ const OrderSchema = new Schema<IOrder>(
     logisticsStatus: {
       type: String,
       enum: Object.values(LogisticsEnum),
-      default: LogisticsEnum.Pending,
+      default: LogisticsEnum.PendingDispatch,
       required: true,
       index: true,
     },

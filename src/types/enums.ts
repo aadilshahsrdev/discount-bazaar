@@ -29,7 +29,7 @@ export const EscrowState = {
 export type EscrowState = (typeof EscrowState)[keyof typeof EscrowState];
 
 export const OrderLogisticsStatus = {
-  Pending: "Pending",
+  PendingDispatch: "Pending_Dispatch",
   Packed: "Packed",
   Shipped: "Shipped",
   OutForDelivery: "OutForDelivery",
@@ -64,3 +64,9 @@ export const PaymentMethod = {
   COD: "COD",
 } as const;
 export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
+
+export const PurchaseType = {
+  Squad: "Squad",
+  Standard: "Standard",
+} as const;
+export type PurchaseType = (typeof PurchaseType)[keyof typeof PurchaseType];

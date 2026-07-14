@@ -4,6 +4,8 @@ import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import escrowRoutes from "./routes/escrowRoutes.js";
 import squadRoutes from "./routes/squadRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
+import disputeRoutes from "./routes/disputeRoutes.js";
 
 /**
  * Express application factory.
@@ -40,6 +42,8 @@ export function createApp(): Application {
   app.use("/api/products", productRoutes);
   app.use("/api/escrow", escrowRoutes);
   app.use("/api/squads", squadRoutes);
+  app.use("/api/orders", orderRoutes);
+  app.use("/api/disputes", disputeRoutes);
 
   return app;
 }
