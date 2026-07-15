@@ -25,6 +25,7 @@ interface SupplierRegisterBody {
   dropshipNetworkId?: string;
   contactNumber?: string;
   cnicNtn?: string;
+  email?: string;
 }
 
 /**
@@ -163,9 +164,13 @@ export const loginB2B = asyncHandler(async (req: Request, res: Response): Promis
 });
 
 export const registerSupplierApplication = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-  const { businessName, dropshipNetworkId, contactNumber, cnicNtn } = req.body as SupplierRegisterBody;
+  const { businessName, dropshipNetworkId, contactNumber, cnicNtn, email } = req.body as SupplierRegisterBody;
   if (!businessName || !dropshipNetworkId || !contactNumber || !cnicNtn) {
     res.status(400).json({ error: "businessName, dropshipNetworkId, contactNumber, and cnicNtn are required." });
+    return;
+  }
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    res.status(400).json({ error: "email must be a valid email address." });
     return;
   }
   if (!/^\+?\d{10,15}$/.test(contactNumber)) {
@@ -184,6 +189,7 @@ export const registerSupplierApplication = asyncHandler(async (req: Request, res
 
   const user = await User.create({
     phoneNumber: contactNumber.trim(),
+    email: email?.trim() || undefined,
     role: UserRoleEnum.Supplier,
     name: businessName.trim(),
     businessName: businessName.trim(),

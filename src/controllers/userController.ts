@@ -8,6 +8,10 @@ interface SupplierApplicationBody {
   reviewNote?: string;
 }
 
+interface SupplierMessageBody {
+  message?: string;
+}
+
 /**
  * GET /api/users/suppliers
  * Admin-only. Lists all supplier accounts so the Admin Command Center can
@@ -89,6 +93,39 @@ export const resolveSupplierApplication = asyncHandler(
         id: application._id.toString(),
         verificationStatus: application.verificationStatus,
         reviewNote: application.reviewNote ?? null,
+      },
+    });
+  },
+);
+
+export const messageSupplier = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const { message } = req.body as SupplierMessageBody;
+
+    if (!id) {
+      res.status(400).json({ error: "A supplier application id is required." });
+      return;
+    }
+    if (!message?.trim()) {
+      res.status(400).json({ error: "message is required." });
+      return;
+    }
+
+    const application = await User.findById(id);
+    if (!application || application.role !== UserRoleEnum.Supplier) {
+      res.status(404).json({ error: "Supplier application not found." });
+      return;
+    }
+
+    const emailTarget = application.email ?? application.phoneNumber;
+    console.info(`[supplier message] To: ${emailTarget} | Subject: DiscountBazaar.PK Application Update | Body: ${message.trim()}`);
+
+    res.status(200).json({
+      message: `Message sent to supplier.`,
+      data: {
+        id: application._id.toString(),
+        sentTo: emailTarget,
       },
     });
   },

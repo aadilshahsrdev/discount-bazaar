@@ -261,6 +261,7 @@ export async function registerSupplierApplication(payload: {
   dropshipNetworkId: string;
   contactNumber: string;
   cnicNtn: string;
+  email?: string;
 }): Promise<{ message: string; data: { userId: string; verificationStatus: string } }> {
   return apiFetch("/api/auth/supplier/register", {
     method: "POST",
@@ -349,6 +350,22 @@ export async function resolveSupplierApplication(
     token,
     body: JSON.stringify(payload),
   });
+  return result.data;
+}
+
+export async function messageSupplier(
+  applicationId: string,
+  message: string,
+  token: string,
+): Promise<{ sentTo: string }> {
+  const result = await apiFetch<{ data: { id: string; sentTo: string } }>(
+    `/api/users/supplier-applications/${applicationId}/message`,
+    {
+      method: "POST",
+      token,
+      body: JSON.stringify({ message }),
+    },
+  );
   return result.data;
 }
 

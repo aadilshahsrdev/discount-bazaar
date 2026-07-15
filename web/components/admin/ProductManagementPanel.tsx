@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import {
   deleteAdminProduct,
@@ -53,8 +53,20 @@ export function ProductManagementPanel({
   const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
   const [isLoading, setLoading] = useState(true);
   const [isSaving, setSaving] = useState(false);
+  const [search, setSearch] = useState("");
 
   const selected = products.find((product) => product._id === selectedId) ?? null;
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return products;
+    const q = search.toLowerCase();
+    return products.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        (p.supplierId?.supplierDetails?.companyName ?? p.supplierId?.name ?? "").toLowerCase().includes(q),
+    );
+  }, [products, search]);
 
   function syncForm(product: AdminProduct): void {
     setForm({
@@ -163,88 +175,104 @@ export function ProductManagementPanel({
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+    <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+      {/* Product list */}
       <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-5 py-4">
-          <h2 className="font-heading text-lg font-bold text-slate-900">Product Catalog</h2>
-          <p className="mt-1 text-sm text-slate-500">Inspect, update, or remove products published in the system.</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-heading text-lg font-bold text-slate-900">Product Catalog</h2>
+              <p className="mt-1 text-sm text-slate-500">{products.length} products in the system</p>
+            </div>
+          </div>
+          <div className="relative mt-3">
+            <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.3-4.3" />
+            </svg>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search products..."
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-4 text-sm text-slate-700 focus:border-oceanic focus:bg-white focus:outline-none"
+            />
+          </div>
         </div>
         <div className="max-h-[680px] overflow-auto">
           {isLoading ? (
-            <div className="px-5 py-6 text-sm text-slate-400">Loading products…</div>
-          ) : products.length === 0 ? (
-            <div className="px-5 py-8 text-sm text-slate-500">No products available.</div>
+            <div className="space-y-3 p-5">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-20 animate-pulse rounded-2xl bg-slate-100" />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="px-5 py-12 text-center">
+              <p className="text-sm text-slate-500">{search ? "No products match your search." : "No products available."}</p>
+            </div>
           ) : (
-            <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-              <thead className="sticky top-0 bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
-                <tr>
-                  <th className="px-5 py-3">Product</th>
-                  <th className="px-5 py-3">Supplier</th>
-                  <th className="px-5 py-3">State</th>
-                  <th className="px-5 py-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
-                {products.map((product) => {
-                  const active = product._id === selectedId;
-                  return (
-                    <tr key={product._id} className={active ? "bg-oceanic/5" : undefined}>
-                      <td className="px-5 py-4">
-                        <p className="font-semibold text-slate-900">{product.title}</p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {formatPKR(product.pricing.currentRetailPrice)} · {product.deposit_percentage}% deposit
-                        </p>
-                      </td>
-                      <td className="px-5 py-4 text-slate-600">
-                        {product.supplierId?.supplierDetails?.companyName ?? product.supplierId?.name ?? "Unknown"}
-                      </td>
-                      <td className="px-5 py-4">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                            product.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
-                          }`}
-                        >
-                          {product.isActive ? "Active" : "Hidden"}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <button
-                          onClick={() => {
-                            setSelectedId(product._id);
-                            syncForm(product);
-                          }}
-                          className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-oceanic hover:text-oceanic"
-                        >
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="divide-y divide-slate-100">
+              {filtered.map((product) => {
+                const active = product._id === selectedId;
+                return (
+                  <button
+                    key={product._id}
+                    onClick={() => {
+                      setSelectedId(product._id);
+                      syncForm(product);
+                    }}
+                    className={`flex w-full items-center gap-4 px-5 py-4 text-left transition ${
+                      active ? "bg-oceanic/5 border-l-4 border-l-oceanic" : "hover:bg-slate-50 border-l-4 border-l-transparent"
+                    }`}
+                  >
+                    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                      {product.images[0] ? (
+                        <img src={product.images[0]} alt={product.title} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="grid h-full w-full place-items-center text-xs text-slate-400">N/A</div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-slate-900">{product.title}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        {formatPKR(product.pricing.currentRetailPrice)} · {product.category}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        product.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {product.isActive ? "Active" : "Hidden"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           )}
         </div>
       </section>
 
+      {/* Edit panel */}
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
             <h2 className="font-heading text-lg font-bold text-slate-900">Manage Product</h2>
             <p className="mt-1 text-sm text-slate-500">Edit the selected product or remove it from the live catalog.</p>
           </div>
-          <button
-            onClick={handleDelete}
-            disabled={!selected || isSaving}
-            className="rounded-full border border-red-200 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-40"
-          >
-            Delete
-          </button>
+          {selected && (
+            <button
+              onClick={handleDelete}
+              disabled={isSaving}
+              className="shrink-0 rounded-full border border-red-200 px-4 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-40"
+            >
+              Delete
+            </button>
+          )}
         </div>
 
         {!selected ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 p-10 text-center text-sm text-slate-500">
-            Select a product from the list to edit it.
+          <div className="rounded-2xl border border-dashed border-slate-200 p-12 text-center">
+            <p className="text-sm text-slate-500">Select a product from the list to edit it.</p>
           </div>
         ) : (
           <div className="space-y-4">

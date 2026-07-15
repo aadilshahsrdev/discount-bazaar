@@ -18,7 +18,7 @@ type Tab = "overview" | "products" | "applications" | "queue" | "listing" | "led
 function AdminPortal() {
   const { token } = useAuth();
   const { toasts, pushToast, dismissToast } = useToasts();
-  const [tab, setTab] = useState<Tab>("queue");
+  const [tab, setTab] = useState<Tab>("overview");
   const [pending, setPending] = useState<PendingProduct[]>([]);
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [isLoading, setLoading] = useState(true);
@@ -64,12 +64,12 @@ function AdminPortal() {
       title="Admin Command Center"
       subtitle="Administrator"
       tabs={[
-        { id: "overview", label: "Overview" },
-        { id: "products", label: "Products" },
-        { id: "applications", label: "Supplier Registrations" },
-        { id: "queue", label: "Proposal Queue" },
-        { id: "listing", label: "Direct Listing" },
-        { id: "ledger", label: "Conflict Resolution & Ledger" },
+        { id: "overview", label: "Overview", icon: "▦" },
+        { id: "products", label: "Products", icon: "▣" },
+        { id: "applications", label: "Supplier Registrations", icon: "◉" },
+        { id: "queue", label: "Proposal Queue", icon: "⇄" },
+        { id: "listing", label: "Direct Listing", icon: "✚" },
+        { id: "ledger", label: "Conflict Resolution", icon: "⚖" },
       ]}
       activeTab={tab}
       onTabChange={(id) => setTab(id as Tab)}
@@ -77,20 +77,37 @@ function AdminPortal() {
       <div className="font-heading">
         {tab === "overview" && (
           <div className="space-y-6">
-            <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-oceanic to-oceanic-dark p-8 text-white shadow-xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/70">Premium Admin Console</p>
+            <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-oceanic via-oceanic to-oceanic-dark p-8 text-white shadow-2xl">
+              <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-mint/10 blur-3xl" />
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">Premium Admin Console</p>
               <h1 className="mt-3 max-w-2xl text-3xl font-bold leading-tight sm:text-4xl">
-                Manage the live catalog, review supplier onboarding, and keep disputes under control.
+                Command Center
               </h1>
-              <p className="mt-4 max-w-3xl text-sm leading-6 text-white/80">
-                This dashboard is isolated from the public storefront. Use it to approve supplier applications, edit products, and handle operational exceptions.
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-white/80">
+                Manage the live catalog, review supplier onboarding, and keep disputes under control.
+                This dashboard is fully isolated from the public storefront.
               </p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
-              <StatCard title="Catalog Control" description="Add, edit, or delete products from the dashboard." />
-              <StatCard title="Supplier Review" description="Approve or reject applications before they gain portal access." />
-              <StatCard title="Operations" description="Monitor disputes, direct listings, and proposal approvals." />
+            <div className="grid gap-5 md:grid-cols-3">
+              <StatCard
+                title="Catalog Control"
+                description="Add, edit, or delete products from the dashboard."
+                icon="▣"
+                onClick={() => setTab("products")}
+              />
+              <StatCard
+                title="Supplier Review"
+                description="Approve or reject applications, send messages to suppliers."
+                icon="◉"
+                onClick={() => setTab("applications")}
+              />
+              <StatCard
+                title="Operations"
+                description="Monitor disputes, direct listings, and proposal approvals."
+                icon="⚖"
+                onClick={() => setTab("ledger")}
+              />
             </div>
           </div>
         )}
@@ -109,7 +126,7 @@ function AdminPortal() {
           <div>
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-slate-900">Supplier Registrations</h1>
-              <p className="mt-1 font-body text-sm text-slate-500">Review business applications, leave notes, and approve or reject the onboarding request.</p>
+              <p className="mt-1 font-body text-sm text-slate-500">Review business applications, approve or reject them, and send messages to the supplier&apos;s email.</p>
             </div>
             <SupplierApplicationsPanel onNotify={(message, ok) => pushToast(message, ok ? "success" : "error")} />
           </div>
@@ -179,11 +196,19 @@ export default function AdminPage() {
   );
 }
 
-function StatCard({ title, description }: { title: string; description: string }) {
+function StatCard({ title, description, icon, onClick }: { title: string; description: string; icon: string; onClick?: () => void }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-oceanic">{title}</p>
-      <p className="mt-3 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
+    <button
+      onClick={onClick}
+      className="group rounded-3xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:shadow-lg hover:border-oceanic/30"
+    >
+      <div className="flex items-center gap-3">
+        <div className="grid h-11 w-11 place-items-center rounded-2xl bg-oceanic/10 text-lg text-oceanic transition group-hover:bg-oceanic group-hover:text-white">
+          {icon}
+        </div>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-oceanic">{title}</p>
+      </div>
+      <p className="mt-4 text-sm leading-6 text-slate-600">{description}</p>
+    </button>
   );
 }

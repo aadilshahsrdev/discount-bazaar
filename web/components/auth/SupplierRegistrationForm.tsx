@@ -8,10 +8,10 @@ export function SupplierRegistrationForm() {
   const [dropshipNetworkId, setDropshipNetworkId] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [cnicNtn, setCnicNtn] = useState("");
+  const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setSubmitting] = useState(false);
-  const [documents, setDocuments] = useState<File | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -24,13 +24,14 @@ export function SupplierRegistrationForm() {
         dropshipNetworkId,
         contactNumber,
         cnicNtn,
+        email: email || undefined,
       });
       setMessage(result.message);
       setBusinessName("");
       setDropshipNetworkId("");
       setContactNumber("");
       setCnicNtn("");
-      setDocuments(null);
+      setEmail("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not submit your application.");
     } finally {
@@ -48,6 +49,7 @@ export function SupplierRegistrationForm() {
               onChange={(e) => setBusinessName(e.target.value)}
               placeholder="e.g. Al-Fatah Trading"
               className="input"
+              required
             />
           </Field>
           <Field label="Dropship Network ID">
@@ -56,6 +58,7 @@ export function SupplierRegistrationForm() {
               onChange={(e) => setDropshipNetworkId(e.target.value)}
               placeholder="Select Network"
               className="input"
+              required
             />
           </Field>
         </div>
@@ -69,6 +72,7 @@ export function SupplierRegistrationForm() {
               onChange={(e) => setContactNumber(e.target.value)}
               placeholder="+92 3XX XXXXXXX"
               className="input"
+              required
             />
           </Field>
           <Field label="CNIC / NTN Number">
@@ -77,24 +81,22 @@ export function SupplierRegistrationForm() {
               onChange={(e) => setCnicNtn(e.target.value)}
               placeholder="42XXX-XXXXXXX-X"
               className="input"
+              required
             />
           </Field>
         </div>
-      </Section>
-
-      <Section title="Compliance Documents" icon="⇪">
-        <label className="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center transition hover:border-oceanic hover:bg-oceanic/5">
-          <input
-            type="file"
-            className="hidden"
-            onChange={(e) => setDocuments(e.target.files?.[0] ?? null)}
-            accept=".pdf,.png,.jpg,.jpeg"
-          />
-          <div className="rounded-full border border-slate-200 bg-white p-3 text-slate-500 shadow-sm">↑</div>
-          <p className="mt-3 text-sm font-medium text-slate-700">Upload Business Registration Proof</p>
-          <p className="mt-1 text-xs text-slate-400">PDF, PNG, or JPG (Max 5MB)</p>
-          {documents && <p className="mt-2 text-xs font-medium text-oceanic">{documents.name}</p>}
-        </label>
+        <div className="mt-4">
+          <Field label="Email Address">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="supplier@business.pk"
+              className="input"
+            />
+          </Field>
+          <p className="mt-2 text-xs text-slate-400">Application updates will be sent to this email.</p>
+        </div>
       </Section>
 
       {message && <p className="rounded-2xl bg-mint/15 px-4 py-3 text-sm font-medium text-mint-dark">{message}</p>}
