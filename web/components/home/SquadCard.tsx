@@ -49,7 +49,7 @@ export function SquadCard({ squad }: { squad: Squad }) {
           href={`/products/${product._id}`}
           className="mt-1 rounded-full bg-oceanic px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-oceanic-dark"
         >
-          Join this Toli
+          Join this Squad
         </Link>
       </div>
     </div>

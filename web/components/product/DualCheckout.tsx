@@ -25,7 +25,7 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
   const remaining = Math.max(0, Math.round(squadPrice - deposit));
   const progress = Math.min(100, Math.round((currentMembers / targetMembers) * 100));
 
-  async function handleJoinToli() {
+  async function handleJoinSquad() {
     if (!user || !token) {
       openLogin();
       return;
@@ -35,9 +35,6 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
     setJoining(true);
     try {
       const checkout = await initiateEscrowCheckout(product._id, activeSquad?._id, token);
-      // No real Safepay gateway is wired up (see src/utils/safepay.ts) — fire
-      // the same webhook Safepay would call on a successful authorization so
-      // squad membership is actually recorded, not just simulated visually.
       await simulateEscrowAuthorization({
         trackerId: checkout.trackerId,
         amount: checkout.holdAmount,
@@ -47,7 +44,7 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
       });
       router.push("/dashboard?success=true");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not start the Toli checkout.");
+      setError(err instanceof Error ? err.message : "Could not start the Squad checkout.");
       setJoining(false);
     }
   }
@@ -75,18 +72,18 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
         </button>
       </div>
 
-      {/* Card 2 — Join Toli */}
+      {/* Card 2 — Join Squad */}
       <div className="flex flex-col justify-between rounded-2xl border-2 border-oceanic bg-oceanic/5 p-5">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-oceanic">Buy as a Toli</p>
-          <p className="mt-1 text-xl font-bold text-oceanic-dark">Join Toli — {formatPKR(squadPrice)}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-oceanic">Buy as a Squad</p>
+          <p className="mt-1 text-xl font-bold text-oceanic-dark">Join Squad — {formatPKR(squadPrice)}</p>
 
           <div className="mt-3">
             <div className="h-2 w-full overflow-hidden rounded-full bg-white">
               <div className="h-full rounded-full bg-mint" style={{ width: `${progress}%` }} />
             </div>
             <p className="mt-1 text-xs text-oceanic-dark/80">
-              {activeSquad ? `${currentMembers}/${targetMembers} joined` : "Be the first to start this Toli"}
+              {activeSquad ? `${currentMembers}/${targetMembers} joined` : "Be the first to start this Squad"}
             </p>
           </div>
 
@@ -101,11 +98,11 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
         {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
 
         <button
-          onClick={handleJoinToli}
+          onClick={handleJoinSquad}
           disabled={isJoining}
           className="mt-4 w-full rounded-full bg-oceanic px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-oceanic-dark disabled:opacity-60"
         >
-          {isJoining ? "Starting your hold…" : "Join this Toli"}
+          {isJoining ? "Starting your hold…" : "Join this Squad"}
         </button>
       </div>
     </div>

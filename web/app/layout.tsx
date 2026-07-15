@@ -19,9 +19,9 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "DiscountBazaar.PK — Join a Toli. Unlock Wholesale Prices.",
+  title: "DiscountBazaar.PK — Join a Squad. Unlock Wholesale Prices.",
   description:
-    "Decentralized social commerce for Pakistan. Team up with your community in a Toli to unlock wholesale prices, or buy solo at standard retail.",
+    "Decentralized social commerce for Pakistan. Team up with your community in a Squad to unlock wholesale prices, or buy solo at standard retail.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -7,6 +7,12 @@ import { useAuth } from "@/lib/AuthContext";
 import { useCart } from "@/lib/CartContext";
 import { WhatsAppLoginModal } from "./WhatsAppLoginModal";
 
+const navLinks = [
+  { label: "Products", href: "/products" },
+  { label: "Offers", href: "/squads" },
+  { label: "Become a Supplier", href: "/supplier" },
+];
+
 export function Navbar() {
   const { user, openLogin, logout } = useAuth();
   const { count } = useCart();
@@ -32,7 +38,19 @@ export function Navbar() {
             </span>
           </Link>
 
-          <form onSubmit={handleSearch} className="mx-auto hidden w-full max-w-md flex-1 md:flex">
+          <nav className="ml-6 hidden items-center gap-5 md:flex">
+            {navLinks.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="text-sm font-medium text-slate-600 transition hover:text-oceanic"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          <form onSubmit={handleSearch} className="mx-auto hidden w-full max-w-xs flex-1 lg:flex">
             <div className="relative w-full">
               <svg
                 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
@@ -48,19 +66,13 @@ export function Navbar() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 type="search"
-                placeholder="Search products or Tolis..."
+                placeholder="Search products or Squads..."
                 className="w-full rounded-full border border-slate-200 bg-slate-50 py-2 pl-9 pr-4 text-sm text-slate-700 focus:border-oceanic focus:bg-white focus:outline-none"
               />
             </div>
           </form>
 
           <div className="ml-auto flex shrink-0 items-center gap-3">
-            <Link
-              href="/products"
-              className="hidden text-sm font-medium text-slate-600 hover:text-oceanic sm:inline"
-            >
-              Shop
-            </Link>
             <Link href="/products" className="relative text-slate-600 hover:text-oceanic" aria-label="Cart">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-6 w-6">
                 <circle cx="9" cy="20" r="1.4" fill="currentColor" stroke="none" />

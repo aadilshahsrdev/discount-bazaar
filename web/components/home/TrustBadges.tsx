@@ -5,7 +5,7 @@ const badges = [
   },
   {
     title: "No Questions Refund",
-    subtitle: "Opt out of any Toli before it locks",
+    subtitle: "Opt out of any Squad before it locks",
   },
   {
     title: "Nationwide Delivery",

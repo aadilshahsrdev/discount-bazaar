@@ -4,17 +4,16 @@ import Link from "next/link";
 import { useIsMounted } from "@/lib/useIsMounted";
 
 const marketplaceLinks = [
-  { label: "Trending Tolis", href: "/squads" },
-  { label: "Electronics", href: "/products?category=Electronics" },
-  { label: "Home Essentials", href: "/products?category=Home+Decor" },
-  { label: "Accessories", href: "/products?category=Accessories" },
+  { label: "All Products", href: "/products" },
+  { label: "Trending Squads", href: "/squads" },
+  { label: "Become a Supplier", href: "/supplier" },
 ];
 
 const supportLinks = [
-  { label: "Help Center", href: "#" },
-  { label: "WhatsApp Support", href: "#" },
-  { label: "Shipping Info", href: "#" },
-  { label: "Refund Policy", href: "#" },
+  { label: "Support", href: "/support" },
+  { label: "Privacy Policy", href: "/privacy-policy" },
+  { label: "Refund Policy", href: "/refund-policy" },
+  { label: "Admin Portal", href: "/admin" },
 ];
 
 export function Footer() {
@@ -31,13 +30,13 @@ export function Footer() {
             <span className="font-heading text-base font-bold text-slate-900">DiscountBazaar.PK</span>
           </div>
           <p className="mt-3 max-w-xs text-sm text-slate-500">
-            Pakistan&apos;s first decentralized social commerce marketplace — team up in a Toli to unlock
+            Pakistan&apos;s first decentralized social commerce marketplace — team up in a Squad to unlock
             wholesale prices, or buy solo at standard retail.
           </p>
         </div>
 
         <FooterColumn title="Marketplace" links={marketplaceLinks} />
-        <FooterColumn title="Support" links={supportLinks} />
+        <FooterColumn title="Support & Legal" links={supportLinks} />
 
         <div>
           <h3 className="font-heading text-sm font-semibold text-slate-900">Download</h3>

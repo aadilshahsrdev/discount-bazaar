@@ -60,13 +60,13 @@ function DashboardContent() {
 
       {justJoined && (
         <div className="mt-4 rounded-xl bg-mint/15 px-4 py-3 text-sm font-medium text-mint-dark">
-          Your 24-hour hold was authorized — you&apos;ve joined the Toli. It&apos;ll show up below.
+          Your 24-hour hold was authorized — you&apos;ve joined the Squad. It&apos;ll show up below.
         </div>
       )}
 
       <div className="mt-6 flex gap-2 border-b border-slate-200">
         <TabButton active={tab === "pledges"} onClick={() => setTab("pledges")}>
-          Active Pledges (Tolis)
+          Active Pledges (Squads)
         </TabButton>
         <TabButton active={tab === "orders"} onClick={() => setTab("orders")}>
           Order History
@@ -80,7 +80,7 @@ function DashboardContent() {
           <p className="text-sm text-red-600">{error}</p>
         ) : tab === "pledges" ? (
           squads.length === 0 ? (
-            <EmptyState message="You haven't joined any Tolis yet. Find one on a product page to get started." />
+            <EmptyState message="You haven't joined any Squads yet. Find one on a product page to get started." />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {squads.map((squad) => (
@@ -93,7 +93,7 @@ function DashboardContent() {
             </div>
           )
         ) : orders.length === 0 ? (
-          <EmptyState message="No orders yet — your solo purchases and captured Tolis will show up here." />
+          <EmptyState message="No orders yet — your solo purchases and captured Squads will show up here." />
         ) : (
           <div className="grid gap-4">
             {orders.map((order) => (

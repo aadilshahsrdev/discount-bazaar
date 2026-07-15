@@ -59,7 +59,7 @@ export function SquadPledgeCard({ squad, onVoted }: { squad: Squad; onVoted: (sq
       {squad.status === "Voting" && (
         <div className="border-t border-amber-200 bg-amber-50 p-4">
           <p className="text-sm font-semibold text-amber-900">
-            ⚠ This Toli reached its 24-hour deadline — decide now
+            ⚠ This Squad reached its 24-hour deadline — decide now
           </p>
           <p className="mt-1 text-xs text-amber-800">
             Proceed to capture your deposit and dispatch the order, or opt out to release your funds instantly.

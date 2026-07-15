@@ -2,41 +2,63 @@ import Link from "next/link";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-oceanic/5 to-transparent">
+    <section className="relative overflow-hidden bg-gradient-to-br from-oceanic via-oceanic-dark to-[#082f52]">
+      {/* Decorative glow accents */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-16 top-8 hidden h-72 w-72 rotate-12 rounded-3xl border-2 border-oceanic/10 lg:block"
+        className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-mint/10 blur-3xl"
       />
-      <div className="relative mx-auto max-w-3xl px-6 py-16 text-center sm:py-20">
-        <span className="inline-flex items-center rounded-full bg-white px-4 py-1.5 text-xs font-medium text-oceanic shadow-sm ring-1 ring-slate-200">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-16 bottom-0 h-72 w-72 rounded-full bg-mint/5 blur-3xl"
+      />
+      {/* Subtle grid pattern */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+        }}
+      />
+
+      <div className="relative mx-auto max-w-3xl px-6 py-20 text-center sm:py-28">
+        <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium text-mint ring-1 ring-white/15 backdrop-blur-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-mint" />
           Now live for buyers across Pakistan
         </span>
 
-        <h1 className="mt-6 font-heading text-4xl font-bold leading-tight text-slate-900 sm:text-5xl">
-          Join a <span className="text-mint-dark">Toli</span>.<br />
-          Unlock Wholesale Prices.
+        <h1 className="mt-7 font-heading text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl md:text-6xl">
+          Buy Together, <span className="text-mint">Save Together</span>
         </h1>
 
-        <p className="mx-auto mt-4 max-w-xl text-base text-slate-500">
-          Stop paying retail prices. Team up with your community to unlock collective discounts on your
-          favorite brands.
+        <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
+          Stop paying retail prices. Team up with your community in a Squad to unlock collective
+          discounts on your favorite brands.
         </p>
 
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href="/products"
-            className="w-full rounded-full bg-oceanic px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-oceanic-dark sm:w-auto"
+            className="w-full rounded-full bg-mint px-7 py-3.5 text-sm font-bold text-oceanic-dark shadow-lg shadow-mint/20 transition hover:bg-mint-dark hover:text-white sm:w-auto"
           >
             Start Browsing Deals
           </Link>
           <Link
             href="/squads"
-            className="w-full rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-oceanic hover:text-oceanic sm:w-auto"
+            className="w-full rounded-full border border-white/20 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/10 sm:w-auto"
           >
-            Learn How Toli Works
+            Learn How Squads Work
           </Link>
         </div>
       </div>
+
+      {/* Bottom fade into page background */}
+      <div
+        aria-hidden
+        className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-b from-transparent to-offwhite"
+      />
     </section>
   );
 }

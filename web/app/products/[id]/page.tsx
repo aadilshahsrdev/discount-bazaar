@@ -1,7 +1,7 @@
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { fetchActiveSquadForProduct, fetchProductById } from "@/lib/api";
 import { DualCheckout } from "@/components/product/DualCheckout";
+import { ProductGallery } from "@/components/product/ProductGallery";
 import { AddToCartButton } from "@/components/home/AddToCartButton";
 import { formatPKR } from "@/lib/format";
 import type { Product } from "@/lib/types";
@@ -28,13 +28,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <div className="grid gap-8 md:grid-cols-2">
-        <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-slate-100">
-          {product.images[0] ? (
-            <Image src={product.images[0]} alt={product.title} fill className="object-cover" sizes="50vw" />
-          ) : (
-            <div className="grid h-full w-full place-items-center text-slate-400">No image</div>
-          )}
-        </div>
+        <ProductGallery images={product.images} alt={product.title} />
 
         <div>
           <span className="text-xs font-medium uppercase tracking-wide text-oceanic">{product.category}</span>

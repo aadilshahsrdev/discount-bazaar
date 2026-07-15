@@ -21,7 +21,7 @@ export function OrderHistoryCard({ order }: { order: Order }) {
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-medium text-slate-800">{order.productId.title}</p>
             <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
-              {order.purchaseType === "Squad" ? "Toli order" : "Solo order"}
+              {order.purchaseType === "Squad" ? "Squad order" : "Solo order"}
             </span>
           </div>
           <p className="mt-1 text-sm font-bold text-slate-900">{formatPKR(order.totals.total)}</p>
