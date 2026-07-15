@@ -8,12 +8,14 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "echo \"(eslint not yet configured)\" && exit 0"
+    "lint": "echo \"(eslint not yet configured)\" && exit 0",
+    "seed": "tsx scripts/seed.ts"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "bullmq": "^5.80.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",

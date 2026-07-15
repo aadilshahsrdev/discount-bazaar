@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/*
+ * Brand tokens for DiscountBazaar.PK (see PROJECT_CONTEXT.md).
+ * Tailwind v4 is CSS-first: declaring these inside @theme generates the
+ * matching utilities automatically — bg-oceanic, text-mint, bg-offwhite, etc.
+ */
+@theme {
+  --color-oceanic: #0f4c81;
+  --color-oceanic-dark: #0b3a63;
+  --color-mint: #00e676;
+  --color-mint-dark: #00b85f;
+  --color-offwhite: #f8f9fa;
+
+  --font-heading: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-roboto), ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-offwhite);
+  color: #0b1220;
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+/* Shared form input style for the Supplier/Admin portal forms. */
+.input {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: #0b1220;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--color-oceanic);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-oceanic) 20%, transparent);
+}

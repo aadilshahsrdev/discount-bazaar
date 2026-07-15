@@ -25,11 +25,12 @@ export const EscrowState = {
   Authorized: "Authorized",
   Captured: "Captured",
   Voided: "Voided",
+  Refunded: "Refunded",
 } as const;
 export type EscrowState = (typeof EscrowState)[keyof typeof EscrowState];
 
 export const OrderLogisticsStatus = {
-  Pending: "Pending",
+  PendingDispatch: "Pending_Dispatch",
   Packed: "Packed",
   Shipped: "Shipped",
   OutForDelivery: "OutForDelivery",
@@ -55,6 +56,8 @@ export const DisputeStatus = {
   UnderReview: "UnderReview",
   Resolved: "Resolved",
   Rejected: "Rejected",
+  Refunded: "Refunded",
+  Closed: "Closed",
 } as const;
 export type DisputeStatus = (typeof DisputeStatus)[keyof typeof DisputeStatus];
 
@@ -64,3 +67,17 @@ export const PaymentMethod = {
   COD: "COD",
 } as const;
 export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
+
+export const PurchaseType = {
+  Squad: "Squad",
+  Standard: "Standard",
+} as const;
+export type PurchaseType = (typeof PurchaseType)[keyof typeof PurchaseType];
+
+export const ProductApprovalStatus = {
+  Pending: "Pending",
+  Approved: "Approved",
+  Rejected: "Rejected",
+} as const;
+export type ProductApprovalStatus =
+  (typeof ProductApprovalStatus)[keyof typeof ProductApprovalStatus];
