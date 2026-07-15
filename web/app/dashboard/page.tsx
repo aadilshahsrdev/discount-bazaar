@@ -44,7 +44,11 @@ function DashboardContent() {
   }, [token]);
 
   useEffect(() => {
-    if (token) loadData();
+    const timer = window.setTimeout(() => {
+      if (token) void loadData();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [token, loadData]);
 
   if (!isHydrated || !user) {

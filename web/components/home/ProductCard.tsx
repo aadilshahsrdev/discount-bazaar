@@ -1,6 +1,6 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import type { Product } from "@/lib/types";
 import { formatPKR } from "@/lib/format";
@@ -13,12 +13,11 @@ export function ProductCard({ product }: { product: Product }) {
     <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
       <Link href={`/products/${product._id}`} className="relative block aspect-square w-full bg-slate-100">
         {product.images[0] ? (
-          <Image
+          <img
             src={product.images[0]}
             alt={product.title}
-            fill
-            className="object-cover transition group-hover:scale-105"
-            sizes="(min-width: 1024px) 25vw, 50vw"
+            className="h-full w-full object-cover transition group-hover:scale-105"
+            loading="lazy"
           />
         ) : (
           <div className="grid h-full w-full place-items-center text-slate-400">No image</div>

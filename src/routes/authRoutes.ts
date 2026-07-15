@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { sendOtp, verifyOtp } from "../controllers/authController.js";
+import { loginB2B, registerSupplierApplication, sendOtp, verifyOtp } from "../controllers/authController.js";
 
 const router = Router();
 
@@ -8,5 +8,11 @@ router.post("/whatsapp/send", sendOtp);
 
 // POST /api/auth/whatsapp/verify — verify OTP and receive JWT
 router.post("/whatsapp/verify", verifyOtp);
+
+// POST /api/auth/b2b/login — admin/supplier login
+router.post("/b2b/login", loginB2B);
+
+// POST /api/auth/supplier/register — public supplier application form
+router.post("/supplier/register", registerSupplierApplication);
 
 export default router;

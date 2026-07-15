@@ -1,6 +1,6 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 
 interface ProductGalleryProps {
@@ -17,14 +17,12 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
       {/* Main display image */}
       <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-slate-100">
         {hasImages ? (
-          <Image
+          <img
             key={activeIndex}
             src={images[activeIndex]}
             alt={alt}
-            fill
-            className="object-cover transition-opacity duration-300"
-            sizes="50vw"
-            priority
+            className="h-full w-full object-cover transition-opacity duration-300"
+            loading="eager"
           />
         ) : (
           <div className="grid h-full w-full place-items-center text-slate-400">No image</div>
@@ -46,12 +44,11 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
               aria-label={`View image ${i + 1}`}
               aria-current={i === activeIndex}
             >
-              <Image
+              <img
                 src={img}
                 alt={`${alt} — image ${i + 1}`}
-                fill
                 className="object-cover"
-                sizes="80px"
+                loading="lazy"
               />
             </button>
           ))}

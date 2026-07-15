@@ -5,6 +5,7 @@ import User from "../src/models/User.js";
 import Product from "../src/models/Product.js";
 import Squad from "../src/models/Squad.js";
 import { UserRole } from "../src/types/enums.js";
+import { hashPassword } from "../src/utils/auth.js";
 
 /**
  * Development seed data — populates a realistic catalog so the storefront
@@ -159,14 +160,21 @@ async function seed(): Promise<void> {
 
   const admin = await User.create({
     phoneNumber: "+923000000001",
+    email: "admin@discountbazaar.pk",
     role: UserRole.Admin,
     name: "DiscountBazaar Admin",
+    verificationStatus: "Approved",
   });
+
+  const adminPassword = await hashPassword("Admin@12345");
+  await User.updateOne({ _id: admin._id }, { $set: { passwordHash: adminPassword.hash, passwordSalt: adminPassword.salt } });
 
   const supplier = await User.create({
     phoneNumber: "+923000000002",
+    email: "supplier@discountbazaar.pk",
     role: UserRole.Supplier,
     name: "HHC Wholesale Supplier",
+    verificationStatus: "Approved",
     supplierDetails: {
       companyName: "HHC Distribution Co.",
       contactPerson: "Ahmed Raza",
@@ -175,6 +183,8 @@ async function seed(): Promise<void> {
       catalogs: [],
     },
   });
+  const supplierPassword = await hashPassword("Supplier@12345");
+  await User.updateOne({ _id: supplier._id }, { $set: { passwordHash: supplierPassword.hash, passwordSalt: supplierPassword.salt } });
   void admin;
 
   console.info(`[seed] Creating ${SEED_PRODUCTS.length} products...`);
@@ -192,6 +202,7 @@ async function seed(): Promise<void> {
         maxSquadDiscount: p.maxSquadDiscount,
         currentRetailPrice: p.marketAnchorPrice,
       },
+      deposit_percentage: 10,
       dualCheckoutEnabled: p.dualCheckoutEnabled,
       maxSquadMembers: p.maxSquadMembers,
       isActive: true,

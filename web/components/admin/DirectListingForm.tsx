@@ -17,6 +17,7 @@ export function DirectListingForm({ onSubmitted }: { onSubmitted: (message: stri
   const [anchorPrice, setAnchorPrice] = useState("");
   const [wholesaleCost, setWholesaleCost] = useState("");
   const [discountPct, setDiscountPct] = useState("");
+  const [depositPct, setDepositPct] = useState("10");
   const [isSubmitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -32,6 +33,7 @@ export function DirectListingForm({ onSubmitted }: { onSubmitted: (message: stri
   const anchor = Number(anchorPrice) || 0;
   const wholesale = Number(wholesaleCost) || 0;
   const discount = Number(discountPct) || 0;
+  const deposit = Number(depositPct) || 10;
   const squadSellingPrice = anchor * (1 - discount / 100);
 
   async function handleSubmit() {
@@ -48,6 +50,10 @@ export function DirectListingForm({ onSubmitted }: { onSubmitted: (message: stri
       onSubmitted("Retail anchor price and wholesale cost must be greater than 0.", false);
       return;
     }
+    if (deposit < 0 || deposit > 100) {
+      onSubmitted("Deposit percentage must be between 0 and 100.", false);
+      return;
+    }
     setSubmitting(true);
     try {
       await uploadProductDirect(
@@ -59,6 +65,7 @@ export function DirectListingForm({ onSubmitted }: { onSubmitted: (message: stri
           market_anchor_price: anchor,
           base_wholesale_cost: wholesale,
           max_squad_discount_percent: discount,
+          deposit_percentage: deposit,
           supplierId,
         },
         token,
@@ -71,6 +78,7 @@ export function DirectListingForm({ onSubmitted }: { onSubmitted: (message: stri
       setAnchorPrice("");
       setWholesaleCost("");
       setDiscountPct("");
+      setDepositPct("10");
     } catch (err) {
       onSubmitted(err instanceof Error ? err.message : "Failed to publish product.", false);
     } finally {
@@ -123,6 +131,18 @@ export function DirectListingForm({ onSubmitted }: { onSubmitted: (message: stri
           <input type="number" value={discountPct} onChange={(e) => setDiscountPct(e.target.value)} className="input" />
         </label>
       </div>
+
+      <label className="block">
+        <span className="mb-1 block text-xs font-medium text-slate-600">Upfront Deposit (%)</span>
+        <input
+          type="number"
+          min="0"
+          max="100"
+          value={depositPct}
+          onChange={(e) => setDepositPct(e.target.value)}
+          className="input"
+        />
+      </label>
 
       <div className="rounded-xl bg-oceanic/5 p-3 text-center text-xs text-slate-600">
         Squad Selling Price at max discount: <span className="font-bold text-oceanic">{formatPKR(squadSellingPrice)}</span>

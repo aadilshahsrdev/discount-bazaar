@@ -14,14 +14,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<string[]>([]);
 
   useEffect(() => {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try {
-        setItems(JSON.parse(raw) as string[]);
-      } catch {
-        // ignore malformed cart
+    const timer = window.setTimeout(() => {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        try {
+          setItems(JSON.parse(raw) as string[]);
+        } catch {
+          // ignore malformed cart
+        }
       }
-    }
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   const value = useMemo<CartState>(

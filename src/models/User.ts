@@ -35,9 +35,18 @@ const SupplierDetailsSchema = new Schema<ISupplierDetails>(
 /* ------------------------------------------------------------------ */
 
 export interface IUser extends Document {
+  email?: string;
   phoneNumber: string; // E.164, unique
   role: UserRole;
   name: string;
+  businessName?: string;
+  dropshipNetworkId?: string;
+  contactNumber?: string;
+  cnicNtn?: string;
+  verificationStatus: "Pending" | "Approved" | "Rejected";
+  reviewNote?: string;
+  passwordHash?: string;
+  passwordSalt?: string;
   whatsappOtp?: string;
   otpExpiresAt?: Date;
   supplierDetails?: ISupplierDetails;
@@ -47,6 +56,7 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>(
   {
+    email: { type: String, trim: true, lowercase: true, unique: true, sparse: true, index: true },
     phoneNumber: {
       type: String,
       required: true,
@@ -62,6 +72,19 @@ const UserSchema = new Schema<IUser>(
       index: true,
     },
     name: { type: String, required: true, trim: true },
+    businessName: { type: String, trim: true },
+    dropshipNetworkId: { type: String, trim: true },
+    contactNumber: { type: String, trim: true },
+    cnicNtn: { type: String, trim: true },
+    verificationStatus: {
+      type: String,
+      enum: ["Pending", "Approved", "Rejected"],
+      default: "Approved",
+      index: true,
+    },
+    reviewNote: { type: String, trim: true },
+    passwordHash: { type: String, select: false },
+    passwordSalt: { type: String, select: false },
     // Transient — never returned to clients.
     whatsappOtp: { type: String, select: false },
     otpExpiresAt: { type: Date, select: false },

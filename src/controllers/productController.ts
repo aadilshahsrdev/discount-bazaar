@@ -8,6 +8,7 @@ interface PricingInput {
   market_anchor_price?: number;
   base_wholesale_cost?: number;
   max_squad_discount_percent?: number;
+  deposit_percentage?: number;
 }
 
 /**
@@ -16,7 +17,7 @@ interface PricingInput {
  * null when all three are acceptable. Prevents raw 500s on malformed input.
  */
 function validatePricing(input: PricingInput): string | null {
-  const { market_anchor_price, base_wholesale_cost, max_squad_discount_percent } = input;
+  const { market_anchor_price, base_wholesale_cost, max_squad_discount_percent, deposit_percentage } = input;
 
   if (
     market_anchor_price == null ||
@@ -45,6 +46,12 @@ function validatePricing(input: PricingInput): string | null {
   }
   if (base_wholesale_cost > market_anchor_price) {
     return "base_wholesale_cost cannot exceed market_anchor_price.";
+  }
+  if (
+    deposit_percentage != null &&
+    (typeof deposit_percentage !== "number" || !Number.isFinite(deposit_percentage) || deposit_percentage < 0 || deposit_percentage > 100)
+  ) {
+    return "deposit_percentage must be a number between 0 and 100.";
   }
   return null;
 }
@@ -157,8 +164,13 @@ interface CreateProductBody {
   market_anchor_price?: number;
   base_wholesale_cost?: number;
   max_squad_discount_percent?: number;
+  deposit_percentage?: number;
   dualCheckoutEnabled?: boolean;
   maxSquadMembers?: number;
+}
+
+interface UpdateProductBody extends CreateProductBody {
+  isActive?: boolean;
 }
 
 /**
@@ -179,6 +191,7 @@ export const createProduct = asyncHandler(
       market_anchor_price,
       base_wholesale_cost,
       max_squad_discount_percent,
+      deposit_percentage,
       dualCheckoutEnabled,
       maxSquadMembers,
     } = body;
@@ -214,6 +227,7 @@ export const createProduct = asyncHandler(
       images: images ?? [],
       category,
       supplierId: new Types.ObjectId(supplierId),
+      deposit_percentage: deposit_percentage ?? 10,
       pricing: {
         marketAnchorPrice: market_anchor_price,
         baseWholesaleCost: base_wholesale_cost,
@@ -242,6 +256,7 @@ interface ProposeProductBody {
   market_anchor_price?: number;
   base_wholesale_cost?: number;
   max_squad_discount_percent?: number;
+  deposit_percentage?: number;
   dualCheckoutEnabled?: boolean;
   maxSquadMembers?: number;
 }
@@ -269,6 +284,7 @@ export const proposeProduct = asyncHandler(
       market_anchor_price,
       base_wholesale_cost,
       max_squad_discount_percent,
+      deposit_percentage,
       dualCheckoutEnabled,
       maxSquadMembers,
     } = body;
@@ -298,6 +314,7 @@ export const proposeProduct = asyncHandler(
       images: images ?? [],
       category,
       supplierId: new Types.ObjectId(supplierId),
+      deposit_percentage: deposit_percentage ?? 10,
       pricing: {
         marketAnchorPrice: market_anchor_price,
         baseWholesaleCost: base_wholesale_cost,
@@ -389,5 +406,100 @@ export const rejectProduct = asyncHandler(
     await product.save();
 
     res.status(200).json({ message: "Product proposal rejected.", data: product });
+  },
+);
+
+/**
+ * GET /api/products/admin/all
+ * Admin-only. Returns all products including inactive ones for dashboard management.
+ */
+export const getAdminProducts = asyncHandler(
+  async (_req: Request, res: Response): Promise<void> => {
+    const products = await Product.find({})
+      .populate({ path: "supplierId", select: "name phoneNumber email supplierDetails.companyName verificationStatus" })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.status(200).json({ data: products });
+  },
+);
+
+/**
+ * PUT /api/products/admin/:id
+ * Admin-only. Updates a product record.
+ */
+export const updateAdminProduct = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    if (!Types.ObjectId.isValid(id)) {
+      res.status(400).json({ error: "Invalid product id." });
+      return;
+    }
+
+    const product = await Product.findById(id);
+    if (!product) {
+      res.status(404).json({ error: "Product not found." });
+      return;
+    }
+
+    const body = req.body as UpdateProductBody;
+    const pricingError = validatePricing({
+      market_anchor_price: body.market_anchor_price ?? product.pricing.marketAnchorPrice,
+      base_wholesale_cost: body.base_wholesale_cost ?? product.pricing.baseWholesaleCost,
+      max_squad_discount_percent:
+        body.max_squad_discount_percent ?? product.pricing.maxSquadDiscount * 100,
+      deposit_percentage: body.deposit_percentage ?? product.deposit_percentage,
+    });
+    if (pricingError) {
+      res.status(400).json({ error: pricingError });
+      return;
+    }
+
+    if (body.title) product.title = body.title;
+    if (body.description) product.description = body.description;
+    if (body.images) product.images = body.images;
+    if (body.category) product.category = body.category;
+    if (body.supplierId && Types.ObjectId.isValid(body.supplierId)) {
+      product.supplierId = new Types.ObjectId(body.supplierId);
+    }
+    if (body.market_anchor_price != null) product.pricing.marketAnchorPrice = body.market_anchor_price;
+    if (body.base_wholesale_cost != null) product.pricing.baseWholesaleCost = body.base_wholesale_cost;
+    if (body.max_squad_discount_percent != null) {
+      product.pricing.maxSquadDiscount = body.max_squad_discount_percent / 100;
+    }
+    if (body.deposit_percentage != null) product.deposit_percentage = body.deposit_percentage;
+    if (body.dualCheckoutEnabled != null) product.dualCheckoutEnabled = body.dualCheckoutEnabled;
+    if (body.maxSquadMembers != null) product.maxSquadMembers = body.maxSquadMembers;
+    if (body.isActive != null) product.isActive = body.isActive;
+    if (body.market_anchor_price != null) product.pricing.currentRetailPrice = body.market_anchor_price;
+
+    await product.save();
+    res.status(200).json({ data: product });
+  },
+);
+
+/**
+ * DELETE /api/products/admin/:id
+ * Admin-only. Soft-deletes a product from the live catalog.
+ */
+export const deleteAdminProduct = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    if (!Types.ObjectId.isValid(id)) {
+      res.status(400).json({ error: "Invalid product id." });
+      return;
+    }
+
+    const product = await Product.findById(id);
+    if (!product) {
+      res.status(404).json({ error: "Product not found." });
+      return;
+    }
+
+    product.isActive = false;
+    product.approvalStatus = ApprovalStatusEnum.Rejected;
+    await product.save();
+
+    res.status(200).json({ message: "Product removed from the live catalog.", data: { id: product._id.toString() } });
   },
 );

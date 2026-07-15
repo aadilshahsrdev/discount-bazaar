@@ -26,17 +26,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isHydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw) as { token: string; user: AuthUser };
-        setToken(parsed.token);
-        setUser(parsed.user);
-      } catch {
-        window.localStorage.removeItem(STORAGE_KEY);
+    const timer = window.setTimeout(() => {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw) as { token: string; user: AuthUser };
+          setToken(parsed.token);
+          setUser(parsed.user);
+        } catch {
+          window.localStorage.removeItem(STORAGE_KEY);
+        }
       }
-    }
-    setHydrated(true);
+      setHydrated(true);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   const value = useMemo<AuthState>(

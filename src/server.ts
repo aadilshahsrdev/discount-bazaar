@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { createApp } from "./app.js";
 import { connectDB, closeDB } from "./config/db.js";
+import { ensureDemoAccounts } from "./utils/demoAccounts.js";
 import { closeSquadWorker, squadWorker, startFallbackSweep } from "./workers/squadWorker.js";
 import { votingWorker } from "./workers/votingResolutionWorker.js";
 
@@ -28,6 +29,10 @@ async function bootstrap(): Promise<void> {
 
   try {
     await connectDB();
+    if (process.env.NODE_ENV !== "production") {
+      await ensureDemoAccounts();
+      console.info("[server] demo admin/supplier accounts ensured.");
+    }
     const app = createApp();
 
     const server = app.listen(port, () => {

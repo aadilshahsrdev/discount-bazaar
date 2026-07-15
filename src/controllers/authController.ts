@@ -1,7 +1,7 @@
 import { type Request, type Response } from "express";
 import User from "../models/User.js";
 import { UserRole as UserRoleEnum } from "../types/enums.js";
-import { generateOtp, signToken } from "../utils/auth.js";
+import { generateOtp, hashPassword, signToken, verifyPassword } from "../utils/auth.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 interface SendOtpBody {
@@ -14,6 +14,19 @@ interface VerifyOtpBody {
   name?: string;
 }
 
+interface B2BLoginBody {
+  identifier?: string;
+  password?: string;
+  role?: "Admin" | "Supplier";
+}
+
+interface SupplierRegisterBody {
+  businessName?: string;
+  dropshipNetworkId?: string;
+  contactNumber?: string;
+  cnicNtn?: string;
+}
+
 /**
  * POST /api/auth/whatsapp/send
  * Generates a WhatsApp OTP, persists it (hashed-by-select) on the prospective
@@ -23,6 +36,12 @@ export const sendOtp = asyncHandler(async (req: Request, res: Response): Promise
   const { phoneNumber } = req.body as SendOtpBody;
   if (!phoneNumber || !/^\+?\d{10,15}$/.test(phoneNumber)) {
     res.status(400).json({ error: "A valid phoneNumber is required." });
+    return;
+  }
+
+  const existing = await User.findOne({ phoneNumber }).lean();
+  if (existing && existing.role !== UserRoleEnum.Buyer) {
+    res.status(403).json({ error: "WhatsApp login is reserved for buyers. Use the B2B login pages." });
     return;
   }
 
@@ -58,6 +77,10 @@ export const verifyOtp = asyncHandler(async (req: Request, res: Response): Promi
     res.status(400).json({ error: "No active OTP for this phone number. Request a new one." });
     return;
   }
+  if (user.role !== UserRoleEnum.Buyer) {
+    res.status(403).json({ error: "WhatsApp login is reserved for buyers. Use the B2B login pages." });
+    return;
+  }
   if (user.otpExpiresAt.getTime() < Date.now()) {
     res.status(400).json({ error: "OTP expired. Request a new one." });
     return;
@@ -91,6 +114,99 @@ export const verifyOtp = asyncHandler(async (req: Request, res: Response): Promi
       phoneNumber: user.phoneNumber,
       name: user.name,
       role: user.role,
+    },
+  });
+});
+
+export const loginB2B = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { identifier, password, role } = req.body as B2BLoginBody;
+  if (!identifier || !password || !role) {
+    res.status(400).json({ error: "identifier, password, and role are required." });
+    return;
+  }
+
+  console.info(`[auth] B2B login attempt role=${role} identifier=${identifier.trim()}`);
+
+  if (role !== UserRoleEnum.Admin && role !== UserRoleEnum.Supplier) {
+    res.status(400).json({ error: "role must be Admin or Supplier." });
+    return;
+  }
+
+  const normalized = identifier.trim().toLowerCase();
+  const lookup = normalized.includes("@") ? { email: normalized } : { phoneNumber: identifier.trim() };
+
+  const user = await User.findOne({ ...lookup, role }).select(
+    "+passwordHash +passwordSalt",
+  );
+  if (!user || !user.passwordHash || !user.passwordSalt) {
+    res.status(401).json({ error: "Invalid credentials." });
+    return;
+  }
+  const ok = await verifyPassword(password, user.passwordSalt, user.passwordHash);
+  if (!ok) {
+    res.status(401).json({ error: "Invalid credentials." });
+    return;
+  }
+
+  const token = signToken({ userId: user._id.toString(), role: user.role });
+  res.status(200).json({
+    message: "Authentication successful.",
+    token,
+    user: {
+      id: user._id.toString(),
+      phoneNumber: user.phoneNumber,
+      name: user.name,
+      role: user.role,
+      verificationStatus: user.verificationStatus,
+    },
+  });
+});
+
+export const registerSupplierApplication = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { businessName, dropshipNetworkId, contactNumber, cnicNtn } = req.body as SupplierRegisterBody;
+  if (!businessName || !dropshipNetworkId || !contactNumber || !cnicNtn) {
+    res.status(400).json({ error: "businessName, dropshipNetworkId, contactNumber, and cnicNtn are required." });
+    return;
+  }
+  if (!/^\+?\d{10,15}$/.test(contactNumber)) {
+    res.status(400).json({ error: "contactNumber must be a valid phone number." });
+    return;
+  }
+
+  const exists = await User.findOne({ $or: [{ phoneNumber: contactNumber }, { dropshipNetworkId }] }).lean();
+  if (exists) {
+    res.status(409).json({ error: "A supplier application already exists for this contact or network ID." });
+    return;
+  }
+
+  const passwordSeed = `${businessName.trim()}-${contactNumber.trim()}-${Date.now()}`;
+  const { salt, hash } = await hashPassword(passwordSeed);
+
+  const user = await User.create({
+    phoneNumber: contactNumber.trim(),
+    role: UserRoleEnum.Supplier,
+    name: businessName.trim(),
+    businessName: businessName.trim(),
+    dropshipNetworkId: dropshipNetworkId.trim(),
+    contactNumber: contactNumber.trim(),
+    cnicNtn: cnicNtn.trim(),
+    verificationStatus: "Pending",
+    passwordHash: hash,
+    passwordSalt: salt,
+    supplierDetails: {
+      companyName: businessName.trim(),
+      contactPerson: businessName.trim(),
+      rating: 0,
+      isActive: false,
+      catalogs: [],
+    },
+  });
+
+  res.status(201).json({
+    message: "Supplier application submitted. An admin will review it shortly.",
+    data: {
+      userId: user._id.toString(),
+      verificationStatus: user.verificationStatus,
     },
   });
 });

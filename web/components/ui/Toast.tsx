@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 
 export interface ToastItem {
   id: number;
@@ -9,6 +9,10 @@ export interface ToastItem {
 }
 
 let toastId = 0;
+
+type ToastPush = (message: string, variant?: ToastItem["variant"]) => void;
+
+const GlobalToastContext = createContext<{ pushToast: ToastPush } | null>(null);
 
 /** Minimal local toast stack — each portal page owns its own instance. */
 export function useToasts() {
@@ -27,6 +31,27 @@ export function useToasts() {
   }, []);
 
   return { toasts, pushToast, dismissToast };
+}
+
+export function GlobalToastProvider({ children }: { children: ReactNode }) {
+  const { toasts, pushToast, dismissToast } = useToasts();
+
+  const value = useMemo(() => ({ pushToast }), [pushToast]);
+
+  return (
+    <GlobalToastContext.Provider value={value}>
+      {children}
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
+    </GlobalToastContext.Provider>
+  );
+}
+
+export function useGlobalToast(): { pushToast: ToastPush } {
+  const ctx = useContext(GlobalToastContext);
+  if (!ctx) {
+    throw new Error("useGlobalToast must be used within GlobalToastProvider");
+  }
+  return ctx;
 }
 
 export function ToastStack({ toasts, onDismiss }: { toasts: ToastItem[]; onDismiss: (id: number) => void }) {

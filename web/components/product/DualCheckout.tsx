@@ -3,49 +3,71 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
-import { useCart } from "@/lib/CartContext";
-import { initiateEscrowCheckout, simulateEscrowAuthorization } from "@/lib/api";
+import { createStandardOrder, initiateEscrowCheckout, simulateEscrowAuthorization } from "@/lib/api";
 import { formatPKR, squadCurrentPrice } from "@/lib/format";
 import type { Product, Squad } from "@/lib/types";
+import { BuyerOtpModal } from "@/components/auth/BuyerOtpModal";
 
 export function DualCheckout({ product, activeSquad }: { product: Product; activeSquad: Squad | null }) {
-  const { user, token, openLogin } = useAuth();
-  const { addItem } = useCart();
+  const { user, token } = useAuth();
   const router = useRouter();
 
-  const [isJoining, setJoining] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"buy" | "squad" | null>(null);
+  const [isProcessing, setProcessing] = useState(false);
+  const [buyerModalOpen, setBuyerModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [added, setAdded] = useState(false);
 
   const { marketAnchorPrice, maxSquadDiscount } = product.pricing;
   const targetMembers = activeSquad?.targetMembers ?? product.maxSquadMembers;
   const currentMembers = activeSquad?.currentMembers ?? 0;
   const squadPrice = squadCurrentPrice(marketAnchorPrice, maxSquadDiscount, currentMembers, targetMembers);
-  const deposit = Math.round(marketAnchorPrice * 0.1);
+  const depositPercentage = product.deposit_percentage ?? 10;
+  const deposit = Math.round(marketAnchorPrice * (depositPercentage / 100));
   const remaining = Math.max(0, Math.round(squadPrice - deposit));
   const progress = Math.min(100, Math.round((currentMembers / targetMembers) * 100));
 
-  async function handleJoinSquad() {
-    if (!user || !token) {
-      openLogin();
+  async function runBuyNow(activeToken?: string) {
+    const resolvedToken = activeToken ?? token;
+    if (!resolvedToken) {
+      setPendingAction("buy");
+      setBuyerModalOpen(true);
       return;
     }
 
     setError(null);
-    setJoining(true);
+    setProcessing(true);
     try {
-      const checkout = await initiateEscrowCheckout(product._id, activeSquad?._id, token);
+      await createStandardOrder({ productId: product._id, token: resolvedToken });
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start the Buy Now checkout.");
+      setProcessing(false);
+    }
+  }
+
+  async function runJoinSquad(activeToken?: string, buyerId?: string) {
+    const resolvedToken = activeToken ?? token;
+    if (!resolvedToken) {
+      setPendingAction("squad");
+      setBuyerModalOpen(true);
+      return;
+    }
+
+    setError(null);
+    setProcessing(true);
+    try {
+      const checkout = await initiateEscrowCheckout(product._id, activeSquad?._id, resolvedToken);
       await simulateEscrowAuthorization({
         trackerId: checkout.trackerId,
         amount: checkout.holdAmount,
         productId: checkout.productId,
         squadId: checkout.squadId,
-        buyerId: user.id,
+        buyerId: buyerId ?? user?.id ?? "",
       });
       router.push("/dashboard?success=true");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start the Squad checkout.");
-      setJoining(false);
+      setProcessing(false);
     }
   }
 
@@ -61,14 +83,11 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
           <p className="mt-2 text-xs text-slate-500">Ships immediately at standard retail price.</p>
         </div>
         <button
-          onClick={() => {
-            addItem(product._id);
-            setAdded(true);
-            setTimeout(() => setAdded(false), 1500);
-          }}
-          className="mt-4 w-full rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400"
+          onClick={() => void runBuyNow()}
+          disabled={isProcessing}
+          className="mt-4 w-full rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 disabled:opacity-60"
         >
-          {added ? "Added to Cart ✓" : "Add to Cart"}
+          {isProcessing && pendingAction === "buy" ? "Starting checkout…" : "Buy Now"}
         </button>
       </div>
 
@@ -93,18 +112,42 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
               {formatPKR(deposit)} today · {formatPKR(remaining)} on delivery
             </p>
           </div>
+
+          <p className="mt-3 rounded-xl border border-oceanic/20 bg-white px-4 py-3 text-xs font-medium text-slate-700">
+            Joining this Squad requires a quick WhatsApp verification and a secure {depositPercentage}% upfront deposit to lock in your wholesale price.
+          </p>
         </div>
 
         {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
 
         <button
-          onClick={handleJoinSquad}
-          disabled={isJoining}
+          onClick={() => void runJoinSquad()}
+          disabled={isProcessing}
           className="mt-4 w-full rounded-full bg-oceanic px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-oceanic-dark disabled:opacity-60"
         >
-          {isJoining ? "Starting your hold…" : "Join this Squad"}
+          {isProcessing && pendingAction === "squad" ? "Starting your hold…" : "Join this Squad"}
         </button>
       </div>
+
+      <BuyerOtpModal
+        open={buyerModalOpen}
+        title="Buyer verification"
+        description="Confirm your WhatsApp number to continue with checkout."
+        onClose={() => {
+          setBuyerModalOpen(false);
+          setPendingAction(null);
+        }}
+        onVerified={({ token: authToken, user: authUser }) => {
+          setBuyerModalOpen(false);
+          if (pendingAction === "buy") {
+            void runBuyNow(authToken);
+          }
+          if (pendingAction === "squad") {
+            void runJoinSquad(authToken, authUser.id);
+          }
+          setPendingAction(null);
+        }}
+      />
     </div>
   );
 }

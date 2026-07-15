@@ -2,19 +2,11 @@ import { notFound } from "next/navigation";
 import { fetchActiveSquadForProduct, fetchProductById } from "@/lib/api";
 import { DualCheckout } from "@/components/product/DualCheckout";
 import { ProductGallery } from "@/components/product/ProductGallery";
-import { AddToCartButton } from "@/components/home/AddToCartButton";
-import { formatPKR } from "@/lib/format";
 import type { Product } from "@/lib/types";
+import { SoloCheckout } from "@/components/product/SoloCheckout";
 
 function SoloOnlyCheckout({ product }: { product: Product }) {
-  return (
-    <div className="mt-6">
-      <p className="text-2xl font-bold text-oceanic">{formatPKR(product.pricing.currentRetailPrice)}</p>
-      <div className="mt-4">
-        <AddToCartButton productId={product._id} />
-      </div>
-    </div>
-  );
+  return <SoloCheckout product={product} />;
 }
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {

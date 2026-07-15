@@ -16,6 +16,7 @@ export interface Product {
   description: string;
   images: string[];
   category: string;
+  deposit_percentage: number;
   pricing: ProductPricing;
   dualCheckoutEnabled: boolean;
   maxSquadMembers: number;
@@ -29,6 +30,20 @@ export interface SupplierSummary {
   name: string;
   phoneNumber: string;
   supplierDetails?: { companyName?: string };
+}
+
+export interface SupplierApplication extends SupplierSummary {
+  email?: string;
+  verificationStatus: "Pending" | "Approved" | "Rejected";
+  reviewNote?: string;
+  dropshipNetworkId?: string;
+  cnicNtn?: string;
+  contactNumber?: string;
+  createdAt: string;
+}
+
+export interface AdminProduct extends Product {
+  supplierId: SupplierSummary & { email?: string; verificationStatus?: "Pending" | "Approved" | "Rejected" };
 }
 
 export interface PendingProduct extends Product {
@@ -152,4 +167,5 @@ export interface AuthUser {
   phoneNumber: string;
   name: string;
   role: UserRole;
+  verificationStatus?: "Pending" | "Approved" | "Rejected";
 }

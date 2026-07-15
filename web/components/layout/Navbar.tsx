@@ -10,11 +10,11 @@ import { WhatsAppLoginModal } from "./WhatsAppLoginModal";
 const navLinks = [
   { label: "Products", href: "/products" },
   { label: "Offers", href: "/squads" },
-  { label: "Become a Supplier", href: "/supplier" },
+  { label: "Become a Supplier", href: "/supplier/register" },
 ];
 
 export function Navbar() {
-  const { user, openLogin, logout } = useAuth();
+  const { user, logout } = useAuth();
   const { count } = useCart();
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -101,17 +101,7 @@ export function Navbar() {
                   {user.name.split(" ")[0]} · Log out
                 </button>
               </div>
-            ) : (
-              <button
-                onClick={openLogin}
-                className="flex items-center gap-1.5 rounded-full border border-oceanic px-4 py-1.5 text-sm font-medium text-oceanic transition hover:bg-oceanic hover:text-white"
-              >
-                <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                  <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5.3 14.3c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .1-1.7-.1-.4-.1-1-.3-1.7-.6-3-1.3-4.9-4.3-5-4.5-.2-.2-1.2-1.6-1.2-3 0-1.4.7-2.1 1-2.4.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5.2.6.7 1.8.7 2 .1.2.1.4 0 .5-.1.2-.2.3-.3.5-.2.2-.3.3-.5.5-.2.2-.4.3-.2.7.2.4.9 1.5 1.9 2.4 1.2 1.1 2.2 1.5 2.7 1.7.4.2.6.1.8-.1.2-.3.7-.9.9-1.1.2-.3.4-.2.6-.1.2.1 1.5.7 1.7.9.2.1.4.2.5.3.1.2.1.9-.1 1.4z" />
-                </svg>
-                Login via WhatsApp
-              </button>
-            )}
+            ) : null}
           </div>
         </div>
       </header>

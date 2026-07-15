@@ -6,14 +6,14 @@ import { useIsMounted } from "@/lib/useIsMounted";
 const marketplaceLinks = [
   { label: "All Products", href: "/products" },
   { label: "Trending Squads", href: "/squads" },
-  { label: "Become a Supplier", href: "/supplier" },
+  { label: "Become a Supplier", href: "/supplier/register" },
 ];
 
 const supportLinks = [
   { label: "Support", href: "/support" },
   { label: "Privacy Policy", href: "/privacy-policy" },
   { label: "Refund Policy", href: "/refund-policy" },
-  { label: "Admin Portal", href: "/admin" },
+  { label: "Admin Portal", href: "/admin/login" },
 ];
 
 export function Footer() {

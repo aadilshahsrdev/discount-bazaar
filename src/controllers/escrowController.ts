@@ -69,7 +69,8 @@ export const initiateCheckout = asyncHandler(
       }
     }
 
-    const holdAmount = Math.round(product.pricing.marketAnchorPrice * 0.1 * 100) / 100;
+    const depositPercentage = product.deposit_percentage ?? 10;
+    const holdAmount = Math.round(product.pricing.marketAnchorPrice * (depositPercentage / 100) * 100) / 100;
     const reference = `p_${productId}_b_${buyerId}_${Date.now().toString(36)}`;
 
     const { trackerId, checkoutUrl } = await createAuthorization({

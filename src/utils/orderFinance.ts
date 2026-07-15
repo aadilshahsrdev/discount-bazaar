@@ -14,8 +14,10 @@ export interface ComputeOrderFinanceInput {
   discountRate: number; // 0–1 fraction (squad) or 0 (standard)
   shipping: number; // PKR
   platformFee: number; // PKR
-  /** The 10% Safepay pre-auth hold that will be captured as the deposit. */
+  /** The Safepay pre-auth hold that will be captured as the deposit. */
   depositPaid: number;
+  /** Optional percentage used to derive the deposit from the locked price. */
+  depositPercentage?: number;
 }
 
 /**
@@ -32,7 +34,7 @@ export interface ComputeOrderFinanceInput {
  * `depositPaid + codAmountDue === total` is asserted before returning.
  */
 export function computeOrderFinance(input: ComputeOrderFinanceInput): IOrderTotals {
-  const { unitPrice, quantity, discountRate, shipping, platformFee, depositPaid } = input;
+  const { unitPrice, quantity, discountRate, shipping, platformFee, depositPaid, depositPercentage } = input;
 
   if (quantity < 1) {
     throw new Error("quantity must be at least 1.");
@@ -48,7 +50,9 @@ export function computeOrderFinance(input: ComputeOrderFinanceInput): IOrderTota
   const supplierPayout = roundPKR(subtotal - platformFee);
 
   // The deposit captured from Safepay cannot exceed the order total.
-  const cappedDeposit = roundPKR(Math.min(depositPaid, total));
+  const derivedDeposit =
+    depositPercentage == null ? depositPaid : roundPKR((gross * depositPercentage) / 100);
+  const cappedDeposit = roundPKR(Math.min(derivedDeposit, total));
   const codAmountDue = roundPKR(total - cappedDeposit);
 
   const totals: IOrderTotals = {

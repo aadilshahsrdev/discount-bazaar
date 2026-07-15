@@ -1,13 +1,16 @@
 import { Router } from "express";
 import {
   approveProduct,
+  deleteAdminProduct,
   createProduct,
+  getAdminProducts,
   getAllProducts,
   getCategories,
   getPendingProducts,
   getProductById,
   proposeProduct,
   rejectProduct,
+  updateAdminProduct,
 } from "../controllers/productController.js";
 import { requireAuth, requireRole } from "../middlewares/authMiddleware.js";
 
@@ -27,6 +30,9 @@ router.post(
 
 // Admin-only proposal review queue
 router.get("/admin/pending", requireAuth, requireRole("Admin"), getPendingProducts);
+router.get("/admin/all", requireAuth, requireRole("Admin"), getAdminProducts);
+router.put("/admin/:id", requireAuth, requireRole("Admin"), updateAdminProduct);
+router.delete("/admin/:id", requireAuth, requireRole("Admin"), deleteAdminProduct);
 
 // Supplier-only: propose a new product for admin review
 router.put("/supplier/propose", requireAuth, requireRole("Supplier"), proposeProduct);

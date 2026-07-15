@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { useAuth } from "@/lib/AuthContext";
+import { useGlobalToast } from "@/components/ui/Toast";
 import type { UserRole } from "@/lib/types";
 
 interface RoleGuardProps {
@@ -19,17 +20,21 @@ interface RoleGuardProps {
 export function RoleGuard({ role, children }: RoleGuardProps) {
   const { user, isHydrated } = useAuth();
   const router = useRouter();
+  const { pushToast } = useGlobalToast();
 
   useEffect(() => {
     if (!isHydrated) return;
     if (!user) {
-      router.replace("/");
+      pushToast(`Unauthorized: You need ${role} access.`, "error");
+      window.setTimeout(() => router.replace("/"), 150);
       return;
     }
     if (user.role !== role) {
-      router.replace("/dashboard");
+      pushToast(`Unauthorized: You need ${role} access.`, "error");
+      window.setTimeout(() => router.replace("/"), 150);
+      return;
     }
-  }, [isHydrated, user, role, router]);
+  }, [isHydrated, pushToast, router, role, user]);
 
   if (!isHydrated || !user || user.role !== role) {
     return (

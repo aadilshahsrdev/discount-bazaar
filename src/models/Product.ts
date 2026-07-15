@@ -36,6 +36,7 @@ export interface IProduct extends Document {
   images: Types.Array<string>;
   category: string;
   supplierId: Types.ObjectId;
+  deposit_percentage: number;
   pricing: IProductPricing;
   dualCheckoutEnabled: boolean;
   maxSquadMembers: number; // per project spec, target squad size
@@ -56,6 +57,7 @@ const ProductSchema = new Schema<IProduct>(
     images: { type: [String], default: [] },
     category: { type: String, required: true, index: true, trim: true },
     supplierId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    deposit_percentage: { type: Number, required: true, min: 0, max: 100, default: 10 },
     pricing: { type: ProductPricingSchema, required: true },
     dualCheckoutEnabled: { type: Boolean, default: true, required: true },
     maxSquadMembers: { type: Number, required: true, min: 1, default: 30 },

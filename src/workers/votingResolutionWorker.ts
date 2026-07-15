@@ -77,6 +77,7 @@ function computeSquadMemberFinance(
     shipping: 0,
     platformFee: 0,
     depositPaid,
+    depositPercentage: product.deposit_percentage ?? 10,
   });
 
   return { totals, unitPrice };

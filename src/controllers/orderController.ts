@@ -171,7 +171,8 @@ export const createStandardOrder = asyncHandler(
     }
 
     const unitPrice = roundPKR(product.pricing.currentRetailPrice);
-    const depositPaid = roundPKR(unitPrice * qty * 0.1);
+    const depositPercentage = product.deposit_percentage ?? 10;
+    const depositPaid = roundPKR(unitPrice * qty * (depositPercentage / 100));
     const reference = `std_p_${productId}_b_${buyerId}_${Date.now().toString(36)}`;
 
     // Authorize + capture the 10% hold synchronously for standard orders.
@@ -214,6 +215,7 @@ export const createStandardOrder = asyncHandler(
           shipping: shippingFee,
           platformFee: 0,
           depositPaid,
+          depositPercentage,
         });
 
         const createdOrders = await Order.create(

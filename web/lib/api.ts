@@ -1,6 +1,7 @@
 import type {
   Category,
   Dispute,
+  AdminProduct,
   ManifestOrder,
   Order,
   Paginated,
@@ -8,6 +9,7 @@ import type {
   Product,
   Squad,
   SquadVote,
+  SupplierApplication,
   SupplierSummary,
 } from "./types";
 
@@ -88,6 +90,33 @@ export async function fetchProducts(options: FetchProductsOptions = {}): Promise
   return apiFetch<Paginated<Product>>(`/api/products${query ? `?${query}` : ""}`);
 }
 
+export async function fetchAdminProducts(token: string): Promise<AdminProduct[]> {
+  const result = await apiFetch<{ data: AdminProduct[] }>("/api/products/admin/all", {
+    token,
+  });
+  return result.data;
+}
+
+export async function updateAdminProduct(
+  productId: string,
+  payload: Partial<ProposeProductPayload> & { isActive?: boolean; supplierId?: string },
+  token: string,
+): Promise<AdminProduct> {
+  const result = await apiFetch<{ data: AdminProduct }>(`/api/products/admin/${productId}`, {
+    method: "PUT",
+    token,
+    body: JSON.stringify(payload),
+  });
+  return result.data;
+}
+
+export async function deleteAdminProduct(productId: string, token: string): Promise<void> {
+  await apiFetch(`/api/products/admin/${productId}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
 export async function fetchProductById(id: string): Promise<Product> {
   const result = await apiFetch<{ data: Product }>(`/api/products/${id}`);
   return result.data;
@@ -151,6 +180,26 @@ export async function simulateEscrowAuthorization(params: {
   });
 }
 
+export async function createStandardOrder(params: {
+  productId: string;
+  quantity?: number;
+  shipping?: number;
+  token: string;
+}): Promise<{ orderId: string; purchaseType: string; totals: { total: number; depositPaid: number; codAmountDue: number } }> {
+  const result = await apiFetch<{
+    data: { orderId: string; purchaseType: string; totals: { total: number; depositPaid: number; codAmountDue: number } };
+  }>("/api/orders", {
+    method: "POST",
+    token: params.token,
+    body: JSON.stringify({
+      productId: params.productId,
+      quantity: params.quantity ?? 1,
+      shipping: params.shipping ?? 0,
+    }),
+  });
+  return result.data;
+}
+
 export async function fetchMySquads(token: string): Promise<Squad[]> {
   const result = await apiFetch<{ data: Squad[] }>("/api/squads/me", { token });
   return result.data;
@@ -196,6 +245,29 @@ export async function verifyWhatsappOtp(
   });
 }
 
+export async function loginB2B(
+  identifier: string,
+  password: string,
+  role: "Admin" | "Supplier",
+): Promise<{ token: string; user: { id: string; phoneNumber: string; name: string; role: string; verificationStatus?: "Pending" | "Approved" | "Rejected" } }> {
+  return apiFetch("/api/auth/b2b/login", {
+    method: "POST",
+    body: JSON.stringify({ identifier, password, role }),
+  });
+}
+
+export async function registerSupplierApplication(payload: {
+  businessName: string;
+  dropshipNetworkId: string;
+  contactNumber: string;
+  cnicNtn: string;
+}): Promise<{ message: string; data: { userId: string; verificationStatus: string } }> {
+  return apiFetch("/api/auth/supplier/register", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 /* ------------------------------------------------------------------ */
 /* Supplier proposals + Admin proposal queue                          */
 /* ------------------------------------------------------------------ */
@@ -208,6 +280,7 @@ export interface ProposeProductPayload {
   market_anchor_price: number;
   base_wholesale_cost: number;
   max_squad_discount_percent: number;
+  deposit_percentage?: number;
   dualCheckoutEnabled?: boolean;
   maxSquadMembers?: number;
 }
@@ -256,6 +329,26 @@ export async function rejectProduct(productId: string, token: string): Promise<P
 
 export async function fetchSuppliers(token: string): Promise<SupplierSummary[]> {
   const result = await apiFetch<{ data: SupplierSummary[] }>("/api/users/suppliers", { token });
+  return result.data;
+}
+
+export async function fetchSupplierApplications(token: string): Promise<SupplierApplication[]> {
+  const result = await apiFetch<{ data: SupplierApplication[] }>("/api/users/supplier-applications", { token });
+  return result.data;
+}
+
+export async function resolveSupplierApplication(
+  applicationId: string,
+  payload: { decision: "Approved" | "Rejected"; reviewNote?: string },
+  token: string,
+): Promise<{ id: string; verificationStatus: "Pending" | "Approved" | "Rejected"; reviewNote?: string | null }> {
+  const result = await apiFetch<{
+    data: { id: string; verificationStatus: "Pending" | "Approved" | "Rejected"; reviewNote?: string | null };
+  }>(`/api/users/supplier-applications/${applicationId}/decision`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify(payload),
+  });
   return result.data;
 }
 
