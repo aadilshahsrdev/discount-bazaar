@@ -58,7 +58,12 @@ export const sendOtp = asyncHandler(async (req: Request, res: Response): Promise
   // Mock SMS gateway — replace with real WhatsApp API when available.
   console.info(`[otp] -> ${phoneNumber}: ${code} (expires ${expiresAt.toISOString()})`);
 
-  res.status(200).json({ message: "OTP sent via WhatsApp." });
+  // In development, return the code so the frontend can display it for testing.
+  const isDev = process.env.NODE_ENV !== "production";
+  res.status(200).json({
+    message: "OTP sent via WhatsApp.",
+    ...(isDev ? { devOtp: code } : {}),
+  });
 });
 
 /**

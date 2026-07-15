@@ -23,13 +23,8 @@ export function Hero() {
         }}
       />
 
-      <div className="relative mx-auto max-w-3xl px-6 py-20 text-center sm:py-28">
-        <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium text-mint ring-1 ring-white/15 backdrop-blur-sm">
-          <span className="h-1.5 w-1.5 rounded-full bg-mint" />
-          Now live for buyers across Pakistan
-        </span>
-
-        <h1 className="mt-7 font-heading text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl md:text-6xl">
+      <div className="relative mx-auto max-w-3xl px-6 py-16 text-center sm:py-20">
+        <h1 className="font-heading text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl md:text-6xl">
           Buy Together, <span className="text-mint">Save Together</span>
         </h1>
 
@@ -38,26 +33,26 @@ export function Hero() {
           discounts on your favorite brands.
         </p>
 
-        <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href="/products"
             className="w-full rounded-full bg-mint px-7 py-3.5 text-sm font-bold text-oceanic-dark shadow-lg shadow-mint/20 transition hover:bg-mint-dark hover:text-white sm:w-auto"
           >
-            Start Browsing Deals
+            Explore Products
           </Link>
           <Link
             href="/squads"
             className="w-full rounded-full border border-white/20 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/10 sm:w-auto"
           >
-            Learn How Squads Work
+            Get Discount Now
           </Link>
         </div>
       </div>
 
-      {/* Bottom fade into page background */}
+      {/* Smooth fade into the page background */}
       <div
         aria-hidden
-        className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-b from-transparent to-offwhite"
+        className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-offwhite"
       />
     </section>
   );

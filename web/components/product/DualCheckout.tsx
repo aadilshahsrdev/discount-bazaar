@@ -21,6 +21,7 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
   const targetMembers = activeSquad?.targetMembers ?? product.maxSquadMembers;
   const currentMembers = activeSquad?.currentMembers ?? 0;
   const squadPrice = squadCurrentPrice(marketAnchorPrice, maxSquadDiscount, currentMembers, targetMembers);
+  const lowestSquadPrice = marketAnchorPrice * (1 - maxSquadDiscount);
   const depositPercentage = product.deposit_percentage ?? 10;
   const deposit = Math.round(marketAnchorPrice * (depositPercentage / 100));
   const remaining = Math.max(0, Math.round(squadPrice - deposit));
@@ -95,7 +96,13 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
       <div className="flex flex-col justify-between rounded-2xl border-2 border-oceanic bg-oceanic/5 p-5">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-oceanic">Buy as a Squad</p>
-          <p className="mt-1 text-xl font-bold text-oceanic-dark">Join Squad — {formatPKR(squadPrice)}</p>
+          <div className="mt-1 flex items-baseline gap-2">
+            <p className="text-xl font-bold text-oceanic-dark">{formatPKR(lowestSquadPrice)}</p>
+            <span className="text-sm text-slate-400 line-through">{formatPKR(marketAnchorPrice)}</span>
+          </div>
+          <p className="mt-1 text-xs font-medium text-mint-dark">
+            Get up to {Math.round(maxSquadDiscount * 100)}% off — as low as {formatPKR(lowestSquadPrice)}
+          </p>
 
           <div className="mt-3">
             <div className="h-2 w-full overflow-hidden rounded-full bg-white">
@@ -107,7 +114,7 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
           </div>
 
           <div className="mt-3 rounded-xl bg-white p-3 text-xs text-slate-600">
-            <p className="font-medium text-slate-700">🔒 Secure 24-Hour Hold</p>
+            <p className="font-medium text-slate-700">Secure 24-Hour Hold</p>
             <p className="mt-1">
               {formatPKR(deposit)} today · {formatPKR(remaining)} on delivery
             </p>

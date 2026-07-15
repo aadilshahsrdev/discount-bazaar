@@ -14,6 +14,7 @@ export function WhatsAppLoginModal() {
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setSubmitting] = useState(false);
+  const [devOtp, setDevOtp] = useState<string | null>(null);
 
   if (!isLoginOpen) return null;
 
@@ -23,13 +24,15 @@ export function WhatsAppLoginModal() {
     setOtp("");
     setName("");
     setError(null);
+    setDevOtp(null);
   }
 
   async function handleSendOtp() {
     setError(null);
     setSubmitting(true);
     try {
-      await sendWhatsappOtp(phoneNumber);
+      const result = await sendWhatsappOtp(phoneNumber);
+      if (result.devOtp) setDevOtp(result.devOtp);
       setStep("otp");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send OTP.");
@@ -97,6 +100,11 @@ export function WhatsAppLoginModal() {
             <p className="text-sm text-slate-500">
               Enter the code sent to <span className="font-medium text-slate-700">{phoneNumber}</span>.
             </p>
+            {devOtp && (
+              <div className="rounded-lg bg-mint/15 px-3 py-2 text-sm text-mint-dark">
+                Demo OTP: <span className="font-bold tracking-wider">{devOtp}</span>
+              </div>
+            )}
             <input
               type="text"
               placeholder="6-digit code"

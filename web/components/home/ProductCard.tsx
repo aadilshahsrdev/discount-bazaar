@@ -11,7 +11,7 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
-      <Link href={`/products/${product._id}`} className="relative block aspect-square w-full bg-slate-100">
+      <Link href={`/products/${product._id}`} className="relative block aspect-[4/3] w-full overflow-hidden bg-slate-100">
         {product.images[0] ? (
           <img
             src={product.images[0]}

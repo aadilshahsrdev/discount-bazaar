@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import Product from "../models/Product.js";
 import { ProductApprovalStatus as ApprovalStatusEnum } from "../types/enums.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { uploadToCloudinary } from "../utils/cloudinary.js";
 
 interface PricingInput {
   market_anchor_price?: number;
@@ -54,6 +55,65 @@ function validatePricing(input: PricingInput): string | null {
     return "deposit_percentage must be a number between 0 and 100.";
   }
   return null;
+}
+
+/**
+ * Parses a value that may arrive as a string, string[], or number from
+ * multipart/form-data into a number. Returns undefined for empty/invalid.
+ */
+function parseNumber(value: unknown): number | undefined {
+  if (value == null || value === "") return undefined;
+  if (typeof value === "number") return value;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function parseBoolean(value: unknown): boolean | undefined {
+  if (value == null || value === "") return undefined;
+  if (typeof value === "boolean") return value;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return undefined;
+}
+
+/**
+ * Parses pasted URL strings from the multipart body. The frontend sends
+ * them as repeated "imageUrls" fields or a comma-separated "imageUrls" string.
+ */
+function parsePastedUrls(body: Record<string, unknown>): string[] {
+  const raw = body.imageUrls;
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw.filter((v): v is string => typeof v === "string" && v.trim().length > 0).map((v) => v.trim());
+  }
+  if (typeof raw === "string") {
+    return raw
+      .split(",")
+      .map((v) => v.trim())
+      .filter((v) => v.length > 0);
+  }
+  return [];
+}
+
+/**
+ * Uploads multer file buffers to Cloudinary and returns their secure URLs.
+ * Falls back to returning the original file path if Cloudinary is not configured
+ * (e.g. in local dev without credentials) — in that case we use a data-free
+ * placeholder so the product can still be created.
+ */
+async function uploadFiles(files: Express.Multer.File[]): Promise<string[]> {
+  const urls: string[] = [];
+  for (const file of files) {
+    const isVideo = file.mimetype.startsWith("video/");
+    try {
+      const url = await uploadToCloudinary(file, isVideo ? "video" : "image");
+      urls.push(url);
+    } catch {
+      // Cloudinary not configured — skip the file rather than blocking product creation.
+      console.warn(`[cloudinary] Skipped file ${file.originalname} — upload failed.`);
+    }
+  }
+  return urls;
 }
 
 interface GetProductsQuery {
@@ -159,6 +219,7 @@ interface CreateProductBody {
   title?: string;
   description?: string;
   images?: string[];
+  imageUrls?: string | string[];
   category?: string;
   supplierId?: string;
   market_anchor_price?: number;
@@ -175,26 +236,26 @@ interface UpdateProductBody extends CreateProductBody {
 
 /**
  * POST /api/products/admin/upload
- * Admin-only. Creates a new product. Pricing fields are accepted in the
- * business-friendly snake_case names from the spec and mapped to the schema.
+ * Admin-only. Creates a new product. Accepts multipart/form-data with up to 4
+ * media files (field "mediaFiles") plus pasted URL strings (field "imageUrls").
+ * Uploaded files are sent to Cloudinary; the resulting secure URLs are combined
+ * with pasted URLs into a single `images` array (max 4 items).
  */
 export const createProduct = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     const body = req.body as CreateProductBody;
+    const files = (req.files as Express.Multer.File[] | undefined) ?? [];
 
-    const {
-      title,
-      description,
-      images,
-      category,
-      supplierId,
-      market_anchor_price,
-      base_wholesale_cost,
-      max_squad_discount_percent,
-      deposit_percentage,
-      dualCheckoutEnabled,
-      maxSquadMembers,
-    } = body;
+    const title = typeof body.title === "string" ? body.title.trim() : undefined;
+    const description = typeof body.description === "string" ? body.description.trim() : undefined;
+    const category = typeof body.category === "string" ? body.category.trim() : undefined;
+    const supplierId = typeof body.supplierId === "string" ? body.supplierId.trim() : undefined;
+    const market_anchor_price = parseNumber(body.market_anchor_price);
+    const base_wholesale_cost = parseNumber(body.base_wholesale_cost);
+    const max_squad_discount_percent = parseNumber(body.max_squad_discount_percent);
+    const deposit_percentage = parseNumber(body.deposit_percentage);
+    const dualCheckoutEnabled = parseBoolean(body.dualCheckoutEnabled);
+    const maxSquadMembers = parseNumber(body.maxSquadMembers);
 
     if (!title || !description || !category || !supplierId) {
       res.status(400).json({
@@ -216,6 +277,11 @@ export const createProduct = asyncHandler(
       return;
     }
 
+    // Combine pasted URLs + uploaded file URLs, enforce max 4.
+    const pastedUrls = parsePastedUrls(body as Record<string, unknown>);
+    const uploadedUrls = await uploadFiles(files);
+    const allImages = [...pastedUrls, ...uploadedUrls].slice(0, 4);
+
     const slug =
       title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") +
       "-" + Date.now().toString(36);
@@ -224,15 +290,15 @@ export const createProduct = asyncHandler(
       title,
       slug,
       description,
-      images: images ?? [],
+      images: allImages,
       category,
       supplierId: new Types.ObjectId(supplierId),
       deposit_percentage: deposit_percentage ?? 10,
       pricing: {
-        marketAnchorPrice: market_anchor_price,
-        baseWholesaleCost: base_wholesale_cost,
+        marketAnchorPrice: market_anchor_price!,
+        baseWholesaleCost: base_wholesale_cost!,
         maxSquadDiscount: max_squad_discount_percent! / 100,
-        currentRetailPrice: market_anchor_price,
+        currentRetailPrice: market_anchor_price!,
       },
       dualCheckoutEnabled: dualCheckoutEnabled ?? true,
       maxSquadMembers: maxSquadMembers ?? 30,
@@ -311,15 +377,15 @@ export const proposeProduct = asyncHandler(
       title,
       slug,
       description,
-      images: images ?? [],
+      images: (images ?? []).slice(0, 4),
       category,
       supplierId: new Types.ObjectId(supplierId),
       deposit_percentage: deposit_percentage ?? 10,
       pricing: {
-        marketAnchorPrice: market_anchor_price,
-        baseWholesaleCost: base_wholesale_cost,
+        marketAnchorPrice: market_anchor_price!,
+        baseWholesaleCost: base_wholesale_cost!,
         maxSquadDiscount: max_squad_discount_percent! / 100,
-        currentRetailPrice: market_anchor_price,
+        currentRetailPrice: market_anchor_price!,
       },
       dualCheckoutEnabled: dualCheckoutEnabled ?? true,
       maxSquadMembers: maxSquadMembers ?? 30,

@@ -28,7 +28,8 @@ export function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
+          {/* Logo */}
           <Link href="/" className="flex shrink-0 items-center gap-2">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-oceanic text-sm font-bold text-white">
               D
@@ -38,7 +39,8 @@ export function Navbar() {
             </span>
           </Link>
 
-          <nav className="ml-6 hidden items-center gap-5 md:flex">
+          {/* Nav links */}
+          <nav className="hidden items-center gap-6 md:flex">
             {navLinks.map((link) => (
               <Link
                 key={link.label}
@@ -50,7 +52,8 @@ export function Navbar() {
             ))}
           </nav>
 
-          <form onSubmit={handleSearch} className="mx-auto hidden w-full max-w-xs flex-1 lg:flex">
+          {/* Search — centered, flexible width */}
+          <form onSubmit={handleSearch} className="mx-auto hidden w-full max-w-xs lg:flex">
             <div className="relative w-full">
               <svg
                 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
@@ -72,7 +75,8 @@ export function Navbar() {
             </div>
           </form>
 
-          <div className="ml-auto flex shrink-0 items-center gap-3">
+          {/* Cart + Auth */}
+          <div className="flex shrink-0 items-center gap-3">
             <Link href="/products" className="relative text-slate-600 hover:text-oceanic" aria-label="Cart">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-6 w-6">
                 <circle cx="9" cy="20" r="1.4" fill="currentColor" stroke="none" />

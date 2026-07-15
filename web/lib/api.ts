@@ -227,7 +227,7 @@ export async function fetchMyOrders(token: string): Promise<Order[]> {
   return result.data;
 }
 
-export async function sendWhatsappOtp(phoneNumber: string): Promise<{ message: string }> {
+export async function sendWhatsappOtp(phoneNumber: string): Promise<{ message: string; devOtp?: string }> {
   return apiFetch("/api/auth/whatsapp/send", {
     method: "POST",
     body: JSON.stringify({ phoneNumber }),
@@ -305,6 +305,63 @@ export async function uploadProductDirect(
     body: JSON.stringify(payload),
   });
   return result.data;
+}
+
+export interface MediaUploadPayload {
+  title: string;
+  description: string;
+  category: string;
+  supplierId: string;
+  market_anchor_price: number;
+  base_wholesale_cost: number;
+  max_squad_discount_percent: number;
+  deposit_percentage?: number;
+  dualCheckoutEnabled?: boolean;
+  maxSquadMembers?: number;
+  imageUrls: string[];
+  mediaFiles: File[];
+}
+
+export async function uploadProductWithMedia(
+  payload: MediaUploadPayload,
+  token: string,
+): Promise<Product> {
+  const formData = new FormData();
+  formData.append("title", payload.title);
+  formData.append("description", payload.description);
+  formData.append("category", payload.category);
+  formData.append("supplierId", payload.supplierId);
+  formData.append("market_anchor_price", String(payload.market_anchor_price));
+  formData.append("base_wholesale_cost", String(payload.base_wholesale_cost));
+  formData.append("max_squad_discount_percent", String(payload.max_squad_discount_percent));
+  if (payload.deposit_percentage != null) formData.append("deposit_percentage", String(payload.deposit_percentage));
+  if (payload.dualCheckoutEnabled != null) formData.append("dualCheckoutEnabled", String(payload.dualCheckoutEnabled));
+  if (payload.maxSquadMembers != null) formData.append("maxSquadMembers", String(payload.maxSquadMembers));
+
+  // Append pasted URLs as repeated fields
+  for (const url of payload.imageUrls) {
+    formData.append("imageUrls", url);
+  }
+  // Append actual files
+  for (const file of payload.mediaFiles) {
+    formData.append("mediaFiles", file);
+  }
+
+  const res = await fetch(`${baseUrl()}/api/products/admin/upload`, {
+    method: "POST",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: "Upload failed." }));
+    throw new Error(error.error ?? `Upload failed (${res.status})`);
+  }
+
+  const result = await res.json();
+  return result.data as Product;
 }
 
 export async function fetchPendingProducts(token: string): Promise<PendingProduct[]> {
