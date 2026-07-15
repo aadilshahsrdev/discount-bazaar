@@ -33,3 +33,12 @@
 - Built Client-Side `RoleGuard` component.
 - Built Supplier SaaS Dashboard (`/supplier`) with Propose Deal form and Order Manifests.
 - Built Admin Command Center (`/admin`) with Proposal Queue, Direct Listing, and Conflict Resolution.
+
+- ### Added (Security & QA Patches)
+- Secured `courierWebhook` with `x-courier-secret` header verification.
+- Implemented real HMAC-SHA256 signature verification for Safepay webhooks.
+- Added NoSQL injection guards and strict type-checking on Mongoose query filters.
+- Added pre-validation for positive-number pricing in `createProduct` and `proposeDeal`.
+- Enforced crash-fast boot checks for required environment variables.
+- Implemented a 15-minute `setInterval` fallback sweep for stranded BullMQ squad jobs.
+- Added `useIsMounted` hook to fix Next.js React hydration risks on date rendering.
