@@ -1,0 +1,42 @@
+Act as a Senior Full-Stack Quality Assurance Engineer and Security Auditor.
+
+We have just completed the MVP for "DiscountBazaar.PK" using a Next.js frontend and a Node.js/Express/MongoDB backend. Before we sign off on the web architecture, your task is to perform a rigorous, full-codebase audit and end-to-end integration test.
+
+Please thoroughly inspect the frontend, backend, and database layers, and provide a detailed audit report. Execute the following checks:
+
+Step 1: Hardcoded Data & Environment Audit
+Search for Hardcoded Variables: Scan all frontend components and backend controllers for hardcoded credentials, API keys, URLs (e.g., localhost instead of environment variables), or static product data. Ensure the UI relies 100% on the live MongoDB database.
+
+Environment Configuration: Verify that dotenv is properly enforcing the presence of critical variables (e.g., JWT_SECRET, MONGODB_URI, PORT).
+
+Step 2: Authentication & Security Loops
+JWT & Role Bypassing: Inspect RoleGuard.tsx on the frontend and authMiddleware.ts on the backend. Attempt (conceptually or via script) to access /admin or /supplier routes using a standard 'Buyer' JWT. Check if the backend strictly rejects unauthorized API calls even if the frontend guard fails.
+
+Input Validation: Check if controllers (especially proposeDeal, checkout, and submitVote) are sanitizing inputs. Are we vulnerable to negative pricing inputs, NoSQL injection, or malformed ObjectIds?
+
+Escrow Security: Verify that the assertZeroWalletInvariant (Total = Deposit + COD) cannot be bypassed mathematically by a malicious payload.
+
+Step 3: Backend Flow & Edge Case Verification
+Idempotency in Webhooks: Review the rewritten Safepay escrow webhook and the Courier webhook. What happens if the courier sends the 'Delivered' webhook twice? Will it crash the server or corrupt the DB?
+
+Database Transaction Fallbacks: Since we bypassed replica set transactions for the local environment, check if the sequential writes (e.g., in resolveDispute and the webhook) leave the database in a corrupted state if step 2 fails after step 1 succeeds.
+
+Worker Expiry Logic: Review squadWorker.ts and votingResolutionWorker.ts. What happens if the BullMQ Redis instance drops? Do squads remain stuck in 'Gathering' forever?
+
+Step 4: Frontend-Backend Integration Health
+Hydration Errors: Scan Next.js components for mismatching server/client renders, particularly involving dates, countdown timers on the Toli cards, or local storage.
+
+State Management & Loading: Are there missing loading states on critical actions (e.g., the "PROCEED" vote button or "Join Toli") that could cause a user to double-click and fire two API requests?
+
+Error Boundaries & Toasts: Are backend 400/500 errors gracefully caught by the UI and presented via Toast notifications, or do they silently fail in the console?
+
+Step 5: The Output Report
+Provide a categorized list of your findings formatted as:
+
+🔴 CRITICAL (Security/Broken Flows): Things that must be fixed immediately.
+
+🟡 WARNINGS (Edge Cases/Hardcoded Data): Bugs that could cause issues at scale.
+
+🟢 PASSING: Areas where the architecture looks exceptionally solid.
+
+Do not write new feature code. Your only job is to audit, break the app, and report back.
