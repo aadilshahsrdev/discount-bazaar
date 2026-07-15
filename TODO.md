@@ -17,8 +17,8 @@
 - [✅] Build Hybrid Homepage (Trending Squads + Catalog).
 - [✅] Build Dual-Checkout Product Detail Page (PDP).
 - [✅] Build Buyer Dashboard (Order Tracking + Voting UI).
-- [ ] Build Admin Command Center (Escrow Ledger, Proposal Queue).
-- [ ] Build Supplier SaaS Dashboard (Product Generator, Manifests).
+- [✅ ] Build Admin Command Center (Escrow Ledger, Proposal Queue).
+- [✅ ] Build Supplier SaaS Dashboard (Product Generator, Manifests).
 
 ## Phase 4: Mobile App (Flutter)
 - [ ] Initialize Flutter project.
