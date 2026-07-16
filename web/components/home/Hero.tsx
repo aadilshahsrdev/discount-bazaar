@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function Hero() {
   return (
-    <section className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden bg-oceanic">
+    <section className="relative flex min-h-[70vh] items-center justify-center overflow-hidden bg-oceanic sm:min-h-[80vh] lg:min-h-[calc(100vh-4rem)]">
       {/* Decorative glow accents */}
       <div
         aria-hidden
@@ -23,12 +23,17 @@ export function Hero() {
         }}
       />
 
-      <div className="relative mx-auto max-w-3xl px-6 py-20 text-center">
-        <h1 className="font-heading text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl md:text-6xl">
+      <div className="relative mx-auto max-w-3xl px-6 py-16 text-center sm:py-20 lg:py-24">
+        <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium text-mint ring-1 ring-white/15 backdrop-blur-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-mint" />
+          Now live for buyers across Pakistan
+        </span>
+
+        <h1 className="mt-6 font-heading text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
           Buy Together, <span className="text-mint">Save Together</span>
         </h1>
 
-        <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
+        <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base lg:text-lg">
           Stop paying retail prices. Team up with your community in a Squad to unlock collective
           discounts on your favorite brands.
         </p>
