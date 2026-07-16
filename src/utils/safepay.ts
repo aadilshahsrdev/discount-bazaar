@@ -85,6 +85,12 @@ export async function createAuthorization(
     if (!initResponse.ok) {
       const errBody = await initResponse.text();
       console.error(`[safepay] /order/v1/init failed (${initResponse.status}): ${errBody}`);
+      if (initResponse.status === 404) {
+        console.error(
+          `[safepay] 404 "Client not found" — the SAFEPAY_API_KEY "${env.apiKey.slice(0, 12)}..." is not recognized by the Safepay sandbox. ` +
+            "Verify the key is a valid sec_... key from the Safepay sandbox dashboard (https://sandbox.api.getsafepay.com/dashboard/login).",
+        );
+      }
       throw new Error(`Safepay init failed (${initResponse.status}): ${errBody}`);
     }
 

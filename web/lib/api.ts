@@ -162,20 +162,17 @@ export async function simulateEscrowAuthorization(params: {
   productId: string;
   squadId: string | null;
   buyerId: string;
+  token: string;
 }): Promise<void> {
-  await apiFetch("/api/escrow/webhook", {
+  await apiFetch("/api/escrow/simulate", {
     method: "POST",
+    token: params.token,
     body: JSON.stringify({
-      event: "authorization.success",
-      data: {
-        tracker_id: params.trackerId,
-        amount: params.amount,
-        metadata: {
-          productId: params.productId,
-          squadId: params.squadId ?? undefined,
-          buyerId: params.buyerId,
-        },
-      },
+      trackerId: params.trackerId,
+      amount: params.amount,
+      productId: params.productId,
+      squadId: params.squadId,
+      buyerId: params.buyerId,
     }),
   });
 }

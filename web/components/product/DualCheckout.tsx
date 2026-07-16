@@ -64,6 +64,7 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
         productId: checkout.productId,
         squadId: checkout.squadId,
         buyerId: buyerId ?? user?.id ?? "",
+        token: resolvedToken,
       });
       router.push("/dashboard?success=true");
     } catch (err) {

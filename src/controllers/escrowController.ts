@@ -235,6 +235,115 @@ export const safepayWebhook = asyncHandler(
 );
 
 /* ------------------------------------------------------------------ */
+/* Step 1.3b — simulateAuthorization (dev/test only)                  */
+/* ------------------------------------------------------------------ */
+
+interface SimulateAuthBody {
+  trackerId?: string;
+  amount?: number;
+  productId?: string;
+  squadId?: string | null;
+  buyerId?: string;
+}
+
+/**
+ * POST /api/escrow/simulate
+ * Protected. Simulates the Safepay `authorization.success` webhook for
+ * development/testing. Does NOT verify a signature (the caller is our own
+ * frontend, not Safepay). The real webhook at /api/escrow/webhook stays
+ * locked down with signature verification.
+ */
+export const simulateAuthorization = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { trackerId, amount, productId, squadId, buyerId } = req.body as SimulateAuthBody;
+
+    if (!trackerId || !productId || !buyerId) {
+      res.status(400).json({ error: "trackerId, productId, and buyerId are required." });
+      return;
+    }
+
+    const event = "authorization.success";
+    const payload: SafepayWebhookPayload = {
+      event,
+      data: {
+        tracker_id: trackerId,
+        amount: amount ?? 0,
+        metadata: { productId, squadId: squadId ?? undefined, buyerId },
+      },
+    };
+
+    let txn: ITransaction | null = null;
+    try {
+      const existing = await Transaction.findOne({ safepayTrackerId: trackerId });
+      if (existing) {
+        txn = existing;
+      } else {
+        const created = await Transaction.create({
+          safepayTrackerId: trackerId,
+          buyerId: new Types.ObjectId(buyerId),
+          productId: new Types.ObjectId(productId),
+          squadId: squadId ? new Types.ObjectId(squadId) : undefined,
+          holdAmount: amount ?? 0,
+          escrowState: EscrowStateEnum.Authorized,
+          authorizedAt: new Date(),
+          webhookEvents: [{ event, receivedAt: new Date(), rawPayload: payload }],
+        });
+
+        let targetSquadId: Types.ObjectId;
+
+        if (squadId) {
+          const squad = await Squad.findById(squadId);
+          if (!squad) {
+            throw new Error(`Simulate referenced missing squad ${squadId}`);
+          }
+          squad.members.push({
+            userId: new Types.ObjectId(buyerId),
+            joinedAt: new Date(),
+            depositTransactionId: created._id,
+          });
+          squad.currentMembers += 1;
+          if (squad.currentMembers >= squad.targetMembers) {
+            squad.status = SquadStatusEnum.Captured;
+            squad.capturedAt = new Date();
+          }
+          await squad.save();
+          targetSquadId = squad._id;
+        } else {
+          const newSquad = await Squad.create({
+            productId: new Types.ObjectId(productId),
+            targetMembers: 30,
+            currentMembers: 1,
+            members: [
+              {
+                userId: new Types.ObjectId(buyerId),
+                joinedAt: new Date(),
+                depositTransactionId: created._id,
+              },
+            ],
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+            status: SquadStatusEnum.Gathering,
+          });
+          targetSquadId = newSquad._id;
+        }
+
+        await squadResolutionQueue.add(
+          "squad-resolution",
+          { squadId: targetSquadId.toString() },
+          { delay: 24 * 60 * 60 * 1000, jobId: `squad_${targetSquadId}` },
+        );
+
+        txn = created;
+      }
+
+      res.status(200).json({ received: true, trackerId, transactionId: txn?._id });
+    } catch (err) {
+      console.error("[escrow simulate] failed:", err);
+      res.status(500).json({ error: "Failed to process simulated authorization." });
+    }
+  },
+);
+
+/* ------------------------------------------------------------------ */
 /* Step 1.4 — adminForceCapture / adminForceVoid                      */
 /* ------------------------------------------------------------------ */
 
