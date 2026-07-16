@@ -1,30 +1,35 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import Image from "next/image";
 import type { Squad } from "@/lib/types";
-import { formatPKR, hoursUntil, squadCurrentPrice } from "@/lib/format";
+import { formatPKR, hoursUntil, squadCurrentPrice, squadDiscountPercent } from "@/lib/format";
 
 export function SquadCard({ squad }: { squad: Squad }) {
   const { productId: product, currentMembers, targetMembers, expiresAt } = squad;
   const anchorPrice = product.pricing.marketAnchorPrice;
-  const currentPrice = squadCurrentPrice(
-    anchorPrice,
-    product.pricing.maxSquadDiscount,
-    currentMembers,
-    targetMembers,
-  );
+  const maxDiscount = product.pricing.maxSquadDiscount;
+  const currentPrice = squadCurrentPrice(anchorPrice, maxDiscount, currentMembers, targetMembers);
+  const discountPct = squadDiscountPercent(maxDiscount, currentMembers, targetMembers);
   const progress = Math.min(100, Math.round((currentMembers / targetMembers) * 100));
   const hoursLeft = hoursUntil(expiresAt);
 
   return (
-    <div className="flex w-64 shrink-0 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm snap-start">
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
       <div className="relative h-40 w-full bg-slate-100">
         {product.images[0] ? (
-          <Image src={product.images[0]} alt={product.title} fill className="object-cover" sizes="256px" />
+          <img
+            src={product.images[0]}
+            alt={product.title}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
         ) : (
           <div className="grid h-full w-full place-items-center text-slate-400">No image</div>
         )}
         <span className="absolute left-2 top-2 rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-medium text-oceanic shadow-sm">
           {hoursLeft}h left
+        </span>
+        <span className="absolute right-2 top-2 rounded-full bg-mint px-2 py-0.5 text-[11px] font-bold text-oceanic-dark shadow-sm">
+          {discountPct}% OFF
         </span>
       </div>
 
@@ -41,7 +46,7 @@ export function SquadCard({ squad }: { squad: Squad }) {
             <div className="h-full rounded-full bg-mint" style={{ width: `${progress}%` }} />
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            {currentMembers}/{targetMembers} Joined
+            {currentMembers}/{targetMembers} Joined · {discountPct}% discount unlocked
           </p>
         </div>
 

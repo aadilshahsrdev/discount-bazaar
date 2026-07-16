@@ -1,10 +1,10 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { voteOnSquad } from "@/lib/api";
-import { formatPKR, squadCurrentPrice } from "@/lib/format";
+import { formatPKR, squadCurrentPrice, squadDiscountPercent } from "@/lib/format";
 import type { Squad } from "@/lib/types";
 
 export function SquadPledgeCard({ squad, onVoted }: { squad: Squad; onVoted: (squad: Squad) => void }) {
@@ -13,8 +13,11 @@ export function SquadPledgeCard({ squad, onVoted }: { squad: Squad; onVoted: (sq
   const [error, setError] = useState<string | null>(null);
 
   const { productId: product, currentMembers, targetMembers } = squad;
+  const maxDiscount = product.pricing.maxSquadDiscount;
+  const anchorPrice = product.pricing.marketAnchorPrice;
   const progress = Math.min(100, Math.round((currentMembers / targetMembers) * 100));
-  const price = squadCurrentPrice(product.pricing.marketAnchorPrice, product.pricing.maxSquadDiscount, currentMembers, targetMembers);
+  const price = squadCurrentPrice(anchorPrice, maxDiscount, currentMembers, targetMembers);
+  const discountPct = squadDiscountPercent(maxDiscount, currentMembers, targetMembers);
 
   const myMembership = squad.members.find((m) => m.userId === user?.id);
   const hasVoted = Boolean(myMembership?.vote);
@@ -39,19 +42,25 @@ export function SquadPledgeCard({ squad, onVoted }: { squad: Squad; onVoted: (sq
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
       <div className="flex gap-4 p-4">
-        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-100 sm:h-20 sm:w-20">
           {product.images[0] && (
-            <Image src={product.images[0]} alt={product.title} fill className="object-cover" sizes="80px" />
+            <img src={product.images[0]} alt={product.title} className="h-full w-full object-cover" loading="lazy" />
           )}
         </div>
-        <div className="flex-1">
-          <p className="text-sm font-medium text-slate-800">{product.title}</p>
-          <p className="mt-1 text-sm font-bold text-oceanic">{formatPKR(price)}</p>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <p className="line-clamp-2 text-sm font-medium text-slate-800">{product.title}</p>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="text-sm font-bold text-oceanic">{formatPKR(price)}</span>
+            <span className="text-xs text-slate-400 line-through">{formatPKR(anchorPrice)}</span>
+            <span className="rounded-full bg-mint px-2 py-0.5 text-[10px] font-bold text-oceanic-dark">
+              {discountPct}% OFF
+            </span>
+          </div>
           <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
             <div className="h-full rounded-full bg-mint" style={{ width: `${progress}%` }} />
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            {currentMembers}/{targetMembers} joined · Status: {squad.status}
+            {currentMembers}/{targetMembers} joined · {discountPct}% discount unlocked · Status: {squad.status}
           </p>
         </div>
       </div>
@@ -59,7 +68,7 @@ export function SquadPledgeCard({ squad, onVoted }: { squad: Squad; onVoted: (sq
       {squad.status === "Voting" && (
         <div className="border-t border-amber-200 bg-amber-50 p-4">
           <p className="text-sm font-semibold text-amber-900">
-            ⚠ This Squad reached its 24-hour deadline — decide now
+            This Squad reached its 24-hour deadline — decide now
           </p>
           <p className="mt-1 text-xs text-amber-800">
             Proceed to capture your deposit and dispatch the order, or opt out to release your funds instantly.
@@ -76,14 +85,14 @@ export function SquadPledgeCard({ squad, onVoted }: { squad: Squad; onVoted: (sq
                 disabled={isVoting !== null}
                 className="w-full rounded-full bg-oceanic px-6 py-3 text-sm font-bold text-white transition hover:bg-oceanic-dark disabled:opacity-60"
               >
-                {isVoting === "Proceed" ? "Processing…" : "PROCEED (Capture Deposit & Dispatch)"}
+                {isVoting === "Proceed" ? "Processing..." : "PROCEED (Capture Deposit & Dispatch)"}
               </button>
               <button
                 onClick={() => castVote("OptOut")}
                 disabled={isVoting !== null}
                 className="w-full rounded-full border-2 border-red-500 bg-white px-6 py-3 text-sm font-bold text-red-600 transition hover:bg-red-50 disabled:opacity-60"
               >
-                {isVoting === "OptOut" ? "Processing…" : "OPT-OUT (Instantly Release My Funds)"}
+                {isVoting === "OptOut" ? "Processing..." : "OPT-OUT (Instantly Release My Funds)"}
               </button>
             </div>
           )}

@@ -13,6 +13,11 @@ export function squadCurrentPrice(anchorPrice: number, maxDiscount: number, curr
   return anchorPrice * (1 - discount);
 }
 
+/** Returns the percentage discount achieved so far (0 to maxDiscount). */
+export function squadDiscountPercent(maxDiscount: number, currentMembers: number, targetMembers: number): number {
+  return Math.round((currentMembers / targetMembers) * maxDiscount);
+}
+
 export function hoursUntil(isoDate: string): number {
   const diffMs = new Date(isoDate).getTime() - Date.now();
   return Math.max(0, Math.round(diffMs / (60 * 60 * 1000)));
