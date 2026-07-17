@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Product, Squad } from "@/lib/types";
 import { formatPKR } from "@/lib/format";
+import { squadMaxDiscountPercent } from "@/lib/format";
 import { useCart } from "@/lib/CartContext";
 import { fetchActiveSquadForProduct } from "@/lib/api";
 
@@ -27,6 +28,7 @@ export function ProductCard({ product }: { product: Product }) {
 
   const hasSquad = squad?.status === "Gathering";
   const squadPrice = product.pricing.marketAnchorPrice * (1 - product.pricing.maxSquadDiscount);
+  const maxDiscountPct = squadMaxDiscountPercent(product.pricing.maxSquadDiscount);
 
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition hover:shadow-md">
@@ -46,6 +48,11 @@ export function ProductCard({ product }: { product: Product }) {
       {hasSquad && (
         <span className="absolute left-3 top-3 rounded-full bg-mint px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-oceanic-dark shadow-sm">
           Squad Deal Available
+        </span>
+      )}
+      {hasSquad && (
+        <span className="absolute right-3 top-3 rounded-full bg-oceanic px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+          Upto {maxDiscountPct}% OFF
         </span>
       )}
 

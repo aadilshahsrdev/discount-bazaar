@@ -17,7 +17,10 @@ export const SquadStatus = {
   Gathering: "Gathering",
   Voting: "Voting",
   Captured: "Captured",
+  Dispatched: "Dispatched",
+  Completed: "Completed",
   Voided: "Voided",
+  Failed: "Failed",
 } as const;
 export type SquadStatus = (typeof SquadStatus)[keyof typeof SquadStatus];
 

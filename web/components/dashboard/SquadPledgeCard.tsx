@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { voteOnSquad } from "@/lib/api";
-import { formatPKR, squadCurrentPrice, squadDiscountPercent, squadMaxDiscountPercent } from "@/lib/format";
+import { formatPKR, squadMaxDiscountPercent } from "@/lib/format";
 import type { Squad } from "@/lib/types";
 
 export function SquadPledgeCard({ squad, onVoted }: { squad: Squad; onVoted: (squad: Squad) => void }) {
@@ -16,8 +16,8 @@ export function SquadPledgeCard({ squad, onVoted }: { squad: Squad; onVoted: (sq
   const maxDiscount = product.pricing.maxSquadDiscount;
   const anchorPrice = product.pricing.marketAnchorPrice;
   const progress = Math.min(100, Math.round((currentMembers / targetMembers) * 100));
-  const price = squadCurrentPrice(anchorPrice, maxDiscount, currentMembers, targetMembers);
-  const discountPct = squadDiscountPercent(maxDiscount, currentMembers, targetMembers);
+  const maxDiscountPct = squadMaxDiscountPercent(maxDiscount);
+  const fullyDiscountedPrice = Math.round(anchorPrice * (1 - maxDiscount));
 
   const myMembership = squad.members.find((m) => m.userId === user?.id);
   const hasVoted = Boolean(myMembership?.vote);
@@ -50,17 +50,17 @@ export function SquadPledgeCard({ squad, onVoted }: { squad: Squad; onVoted: (sq
         <div className="flex min-w-0 flex-1 flex-col">
           <p className="line-clamp-2 text-sm font-medium text-slate-800">{product.title}</p>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-sm font-bold text-oceanic">{formatPKR(price)}</span>
+            <span className="text-sm font-bold text-oceanic">{formatPKR(fullyDiscountedPrice)}</span>
             <span className="text-xs text-slate-400 line-through">{formatPKR(anchorPrice)}</span>
             <span className="rounded-full bg-mint px-2 py-0.5 text-[10px] font-bold text-oceanic-dark">
-              {discountPct}% OFF
+              Upto {maxDiscountPct}% OFF
             </span>
           </div>
           <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
             <div className="h-full rounded-full bg-mint" style={{ width: `${progress}%` }} />
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            {currentMembers}/{targetMembers} joined · {discountPct}% / {squadMaxDiscountPercent(maxDiscount)}% unlocked · Status: {squad.status}
+            {currentMembers}/{targetMembers} joined · Upto {maxDiscountPct}% OFF · Status: {squad.status}
           </p>
         </div>
       </div>

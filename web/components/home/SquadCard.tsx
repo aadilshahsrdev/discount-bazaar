@@ -1,15 +1,14 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import type { Squad } from "@/lib/types";
-import { formatPKR, hoursUntil, squadCurrentPrice, squadDiscountPercent, squadMaxDiscountPercent } from "@/lib/format";
+import { formatPKR, hoursUntil, squadMaxDiscountPercent } from "@/lib/format";
 
 export function SquadCard({ squad }: { squad: Squad }) {
   const { productId: product, currentMembers, targetMembers, expiresAt } = squad;
   const anchorPrice = product.pricing.marketAnchorPrice;
   const maxDiscount = product.pricing.maxSquadDiscount;
-  const currentPrice = squadCurrentPrice(anchorPrice, maxDiscount, currentMembers, targetMembers);
-  const discountPct = squadDiscountPercent(maxDiscount, currentMembers, targetMembers);
   const maxDiscountPct = squadMaxDiscountPercent(maxDiscount);
+  const fullyDiscountedPrice = Math.round(anchorPrice * (1 - maxDiscount));
   const progress = Math.min(100, Math.round((currentMembers / targetMembers) * 100));
   const hoursLeft = hoursUntil(expiresAt);
 
@@ -30,7 +29,7 @@ export function SquadCard({ squad }: { squad: Squad }) {
           {hoursLeft}h left
         </span>
         <span className="absolute right-2 top-2 rounded-full bg-mint px-2 py-0.5 text-[11px] font-bold text-oceanic-dark shadow-sm">
-          {discountPct}% OFF
+          Upto {maxDiscountPct}% OFF
         </span>
       </Link>
 
@@ -38,7 +37,7 @@ export function SquadCard({ squad }: { squad: Squad }) {
         <h3 className="line-clamp-2 text-sm font-medium text-slate-800">{product.title}</h3>
 
         <div className="flex items-baseline gap-2">
-          <span className="text-base font-bold text-oceanic">{formatPKR(currentPrice)}</span>
+          <span className="text-base font-bold text-oceanic">{formatPKR(fullyDiscountedPrice)}</span>
           <span className="text-xs text-slate-400 line-through">{formatPKR(anchorPrice)}</span>
         </div>
 
@@ -47,7 +46,7 @@ export function SquadCard({ squad }: { squad: Squad }) {
             <div className="h-full rounded-full bg-mint" style={{ width: `${progress}%` }} />
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            {currentMembers}/{targetMembers} Joined · {discountPct}% / {maxDiscountPct}% unlocked
+            {currentMembers}/{targetMembers} Joined · Upto {maxDiscountPct}% OFF
           </p>
         </div>
 

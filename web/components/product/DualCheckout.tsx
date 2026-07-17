@@ -7,8 +7,6 @@ import { useCart } from "@/lib/CartContext";
 import { getShippingAddress, initiateEscrowCheckout, saveShippingAddress } from "@/lib/api";
 import {
   formatPKR,
-  squadCurrentPrice,
-  squadDiscountPercent,
   squadMaxDiscountPercent,
 } from "@/lib/format";
 import { getDeliveryFee } from "@/lib/pakistanLocations";
@@ -38,10 +36,9 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
   const targetMembers = activeSquad?.targetMembers ?? product.maxSquadMembers;
   const currentMembers = activeSquad?.currentMembers ?? 0;
 
-  const unitSquadPrice = squadCurrentPrice(marketAnchorPrice, maxSquadDiscount, currentMembers, targetMembers);
-  const subtotal = unitSquadPrice * quantity;
-  const discountPct = squadDiscountPercent(maxSquadDiscount, currentMembers, targetMembers);
   const maxDiscountPct = squadMaxDiscountPercent(maxSquadDiscount);
+  const fullyDiscountedUnitPrice = Math.round(marketAnchorPrice * (1 - maxSquadDiscount));
+  const subtotal = fullyDiscountedUnitPrice * quantity;
 
   const depositPct = product.deposit_percentage ?? 10;
   const deliveryFee = address ? getDeliveryFee(address.province, address.city) : 0;
@@ -187,7 +184,7 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
             <div className="flex items-center gap-2">
               <p className="text-xs font-medium uppercase tracking-wide text-oceanic">Buy as a Squad</p>
               <span className="rounded-full bg-mint px-2 py-0.5 text-[10px] font-bold text-oceanic-dark">
-                {discountPct}% OFF
+                Upto {maxDiscountPct}% OFF
               </span>
               {isFull && (
                 <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-600">
@@ -200,7 +197,7 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
             </p>
             {quantity > 1 && (
               <p className="text-xs text-oceanic-dark/70">
-                {quantity} × {formatPKR(unitSquadPrice)}
+                {quantity} × {formatPKR(fullyDiscountedUnitPrice)}
               </p>
             )}
 
@@ -210,7 +207,7 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
               </div>
               <p className="mt-1 text-xs text-oceanic-dark/80">
                 {activeSquad
-                  ? `${currentMembers}/${targetMembers} joined · ${discountPct}% / ${maxDiscountPct}% unlocked`
+                  ? `${currentMembers}/${targetMembers} joined · Upto ${maxDiscountPct}% OFF`
                   : "Be the first to start this Squad"}
               </p>
             </div>
@@ -278,7 +275,7 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
 
             {/* Financial breakdown */}
             <div className="space-y-2 rounded-xl border border-slate-200 p-4">
-              <SummaryRow label={`Subtotal (${quantity} × ${formatPKR(unitSquadPrice)})`} value={formatPKR(subtotal)} />
+              <SummaryRow label={`Subtotal (${quantity} × ${formatPKR(fullyDiscountedUnitPrice)})`} value={formatPKR(subtotal)} />
               <SummaryRow label="Delivery Fee" value={formatPKR(deliveryFee)} />
               <div className="my-2 border-t border-dashed border-slate-200" />
               <SummaryRow label="Total Order Value" value={formatPKR(totalOrderValue)} bold />
@@ -328,7 +325,8 @@ export function DualCheckout({ product, activeSquad }: { product: Product; activ
             <iframe
               src={safepayCheckoutUrl}
               className="h-[calc(85vh-49px)] w-full border-0"
-              allow="payment"
+              allow="payment; publickey-credentials-get; web-auth; https://sandbox.api.getsafepay.com https://getsafepay.com"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-payment allow-top-navigation-by-user-activation"
               title="Safepay Checkout"
             />
           </div>

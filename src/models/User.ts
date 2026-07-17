@@ -79,6 +79,7 @@ export interface IUser extends Document {
   otpExpiresAt?: Date;
   supplierDetails?: ISupplierDetails;
   shippingAddress?: IShippingAddress;
+  isSuspended?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -125,6 +126,7 @@ const UserSchema = new Schema<IUser>(
       },
     },
     shippingAddress: { type: ShippingAddressSchema, default: null },
+    isSuspended: { type: Boolean, default: false, index: true },
   },
   { timestamps: true },
 );

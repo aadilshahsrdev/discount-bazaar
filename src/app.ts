@@ -7,6 +7,7 @@ import squadRoutes from "./routes/squadRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import disputeRoutes from "./routes/disputeRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 /**
  * Express application factory.
@@ -58,6 +59,7 @@ export function createApp(): Application {
   app.use("/api/orders", orderRoutes);
   app.use("/api/disputes", disputeRoutes);
   app.use("/api/users", userRoutes);
+  app.use("/api/admin", adminRoutes);
 
   return app;
 }

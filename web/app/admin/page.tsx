@@ -8,12 +8,15 @@ import { DirectListingForm } from "@/components/admin/DirectListingForm";
 import { DisputeLedgerTable } from "@/components/admin/DisputeLedgerTable";
 import { ProductManagementPanel } from "@/components/admin/ProductManagementPanel";
 import { SupplierApplicationsPanel } from "@/components/admin/SupplierApplicationsPanel";
+import { SquadOperationsPanel } from "@/components/admin/SquadOperationsPanel";
+import { FinanceLedgerPanel } from "@/components/admin/FinanceLedgerPanel";
+import { CustomerDirectoryPanel } from "@/components/admin/CustomerDirectoryPanel";
 import { ToastStack, useToasts } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/AuthContext";
 import { fetchDisputes, fetchPendingProducts } from "@/lib/api";
 import type { Dispute, PendingProduct } from "@/lib/types";
 
-type Tab = "overview" | "products" | "applications" | "queue" | "listing" | "ledger";
+type Tab = "overview" | "products" | "applications" | "queue" | "listing" | "ledger" | "squads" | "finance" | "customers";
 
 function AdminPortal() {
   const { token } = useAuth();
@@ -69,6 +72,9 @@ function AdminPortal() {
         { id: "applications", label: "Supplier Registrations", icon: "◉" },
         { id: "queue", label: "Proposal Queue", icon: "⇄" },
         { id: "listing", label: "Direct Listing", icon: "✚" },
+        { id: "squads", label: "Squad Operations", icon: "⬚" },
+        { id: "finance", label: "Financial Ledger", icon: "₨" },
+        { id: "customers", label: "Customer Directory", icon: "☻" },
         { id: "ledger", label: "Conflict Resolution", icon: "⚖" },
       ]}
       activeTab={tab}
@@ -180,6 +186,16 @@ function AdminPortal() {
               )}
             </div>
           </div>
+        )}
+
+        {tab === "squads" && (
+          <SquadOperationsPanel onNotify={(message, ok) => pushToast(message, ok ? "success" : "error")} />
+        )}
+
+        {tab === "finance" && <FinanceLedgerPanel />}
+
+        {tab === "customers" && (
+          <CustomerDirectoryPanel onNotify={(message, ok) => pushToast(message, ok ? "success" : "error")} />
         )}
       </div>
 

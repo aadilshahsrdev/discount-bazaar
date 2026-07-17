@@ -76,7 +76,12 @@ export const initiateCheckout = asyncHandler(
     }
 
     const depositPercentage = product.deposit_percentage ?? 10;
-    const unitDeposit = Math.round(product.pricing.marketAnchorPrice * (depositPercentage / 100) * 100) / 100;
+    // Deposit is calculated against the fully-discounted squad price, not the
+    // retail anchor. This matches the storefront display: buyer sees
+    // anchorPrice * (1 - maxSquadDiscount) as the squad price, and pays
+    // depositPercentage % of that.
+    const discountedUnitPrice = product.pricing.marketAnchorPrice * (1 - product.pricing.maxSquadDiscount);
+    const unitDeposit = Math.round(discountedUnitPrice * (depositPercentage / 100) * 100) / 100;
     const holdAmount = Math.round(unitDeposit * quantity * 100) / 100;
     const reference = `p_${productId}_b_${buyerId}_${Date.now().toString(36)}`;
 
