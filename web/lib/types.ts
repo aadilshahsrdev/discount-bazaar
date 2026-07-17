@@ -68,7 +68,14 @@ export interface SquadMember {
   vote?: SquadVote;
 }
 
-export type SquadStatus = "Gathering" | "Voting" | "Captured" | "Resolved" | "Failed";
+export type SquadStatus =
+  | "Gathering"
+  | "Voting"
+  | "Captured"
+  | "Dispatched"
+  | "Completed"
+  | "Voided"
+  | "Failed";
 
 export interface Squad {
   _id: string;

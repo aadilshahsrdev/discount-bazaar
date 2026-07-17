@@ -7,7 +7,9 @@ import type {
   Paginated,
   PendingProduct,
   Product,
+  ShippingAddress,
   Squad,
+  SquadProductSummary,
   SquadVote,
   SupplierApplication,
   SupplierSummary,
@@ -254,6 +256,134 @@ export async function getShippingAddress(
   const result = await apiFetch<{ data: import("./types").ShippingAddress | null }>(
     "/api/users/profile/address",
     { token },
+  );
+  return result.data;
+}
+
+/* ─── Admin: Squad Operations ─────────────────────────────────────── */
+
+export interface AdminSquadDetail {
+  _id: string;
+  productId: SquadProductSummary;
+  targetMembers: number;
+  currentMembers: number;
+  members: Array<{
+    userId: string;
+    joinedAt: string;
+    vote?: SquadVote;
+    name: string;
+    phoneNumber: string;
+    email?: string;
+    shippingAddress: ShippingAddress | null;
+  }>;
+  expiresAt: string;
+  status: string;
+}
+
+export async function adminListSquads(token: string): Promise<Squad[]> {
+  const result = await apiFetch<{ data: Squad[] }>("/api/admin/squads", { token });
+  return result.data;
+}
+
+export async function adminGetSquad(squadId: string, token: string): Promise<AdminSquadDetail> {
+  const result = await apiFetch<{ data: AdminSquadDetail }>(`/api/admin/squads/${squadId}`, { token });
+  return result.data;
+}
+
+export async function adminDispatchSquad(
+  squadId: string,
+  token: string,
+): Promise<{ squadId: string; status: string; membersDispatched: number }> {
+  const result = await apiFetch<{ data: { squadId: string; status: string; membersDispatched: number } }>(
+    `/api/admin/squads/${squadId}/dispatch`,
+    { method: "POST", token },
+  );
+  return result.data;
+}
+
+export async function adminCreateSquad(
+  body: { productId: string; targetMembers?: number; expiryHours?: number },
+  token: string,
+): Promise<{ _id: string; status: string }> {
+  const result = await apiFetch<{ data: { _id: string; status: string } }>(
+    "/api/admin/squads/create",
+    { method: "POST", token, body: JSON.stringify(body) },
+  );
+  return result.data;
+}
+
+/* ─── Admin: Financial Ledger ─────────────────────────────────────── */
+
+export interface FinanceOverview {
+  totalEscrowHolding: number;
+  pendingSupplierPayouts: number;
+  totalPlatformRevenue: number;
+}
+
+export interface LedgerEntry {
+  date: string;
+  transactionId: string;
+  squadId: string | null;
+  productName: string;
+  type: string;
+  colorClass: string;
+  amount: number;
+  commission: number;
+}
+
+export async function adminFinanceOverview(token: string): Promise<FinanceOverview> {
+  const result = await apiFetch<{ data: FinanceOverview }>("/api/admin/finance/overview", { token });
+  return result.data;
+}
+
+export async function adminFinanceLedger(token: string): Promise<LedgerEntry[]> {
+  const result = await apiFetch<{ data: LedgerEntry[] }>("/api/admin/finance/ledger", { token });
+  return result.data;
+}
+
+/* ─── Admin: Customer Directory ───────────────────────────────────── */
+
+export interface AdminCustomer {
+  _id: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  activePledges: number;
+  lifetimeSpend: number;
+  accountStatus: "Active" | "Suspended";
+  isSuspended: boolean;
+}
+
+export interface AdminCustomerDetail extends AdminCustomer {
+  shippingAddress: ShippingAddress | null;
+  createdAt: string;
+  orderHistory: Array<{
+    _id: string;
+    date: string;
+    productName: string;
+    squadId: string | null;
+    amount: number;
+    escrowState: string;
+  }>;
+}
+
+export async function adminListCustomers(token: string): Promise<AdminCustomer[]> {
+  const result = await apiFetch<{ data: AdminCustomer[] }>("/api/admin/customers", { token });
+  return result.data;
+}
+
+export async function adminGetCustomer(customerId: string, token: string): Promise<AdminCustomerDetail> {
+  const result = await apiFetch<{ data: AdminCustomerDetail }>(`/api/admin/customers/${customerId}`, { token });
+  return result.data;
+}
+
+export async function adminToggleSuspendCustomer(
+  customerId: string,
+  token: string,
+): Promise<{ isSuspended: boolean }> {
+  const result = await apiFetch<{ data: { isSuspended: boolean } }>(
+    `/api/admin/customers/${customerId}/suspend`,
+    { method: "PUT", token },
   );
   return result.data;
 }
